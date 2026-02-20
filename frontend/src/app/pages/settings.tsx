@@ -28,6 +28,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
+import { studentNavItems, freelancerNavItems } from "../../config/navigation";
 
 
 export function Settings() {
@@ -112,18 +113,15 @@ export function Settings() {
             alert("Failed to delete account.");
         }
     };
-
-    const navItems = [
-        { label: "Dashboard", path: "/student/dashboard", icon: <Briefcase className="w-5 h-5" /> },
-        { label: "Profile", path: "/profile", icon: <User className="w-5 h-5" /> },
-        { label: "Settings", path: "/settings", icon: <SettingsIcon className="w-5 h-5" /> },
-    ];
-
     const userRole = user?.role || "student";
     const currentTheme = userRole === "freelancer" ? "emerald" : "indigo";
+    const buttonColor = userRole === "freelancer" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700";
+    const switchColor = userRole === "freelancer" ? "data-[state=checked]:!bg-emerald-600" : "data-[state=checked]:!bg-indigo-600";
+
+    const currentNavItems = userRole === "freelancer" ? freelancerNavItems : studentNavItems;
 
     if (loading) return (
-        <DashboardLayout navItems={navItems} userType={userRole} theme={currentTheme}>
+        <DashboardLayout navItems={currentNavItems} userType={userRole} theme={currentTheme}>
             <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
@@ -131,7 +129,7 @@ export function Settings() {
     );
 
     return (
-        <DashboardLayout navItems={navItems} userType={userRole} theme={currentTheme}>
+        <DashboardLayout navItems={currentNavItems} userType={userRole} theme={currentTheme}>
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-foreground">Settings</h1>
@@ -195,7 +193,7 @@ export function Settings() {
                                         <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
                                     </div>
                                     <div className="pt-4">
-                                        <Button onClick={handleUpdateAccount} className="bg-indigo-600 hover:bg-indigo-700">Update Profile</Button>
+                                        <Button onClick={handleUpdateAccount} className={`${buttonColor} text-white`}>Update Profile</Button>
                                     </div>
                                 </div>
                             </Card>
@@ -214,6 +212,7 @@ export function Settings() {
                                         <Switch
                                             checked={emailNotifications}
                                             onCheckedChange={(val) => handleUpdateNotifications('email', val)}
+                                            className={switchColor}
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -224,6 +223,7 @@ export function Settings() {
                                         <Switch
                                             checked={projectUpdates}
                                             onCheckedChange={(val) => handleUpdateNotifications('projectUpdates', val)}
+                                            className={switchColor}
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -234,6 +234,7 @@ export function Settings() {
                                         <Switch
                                             checked={marketingEmails}
                                             onCheckedChange={(val) => handleUpdateNotifications('marketing', val)}
+                                            className={switchColor}
                                         />
                                     </div>
                                 </div>
@@ -255,6 +256,7 @@ export function Settings() {
                                     <Switch
                                         checked={theme === 'dark'}
                                         onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                                        className={switchColor}
                                     />
                                 </div>
                             </Card>

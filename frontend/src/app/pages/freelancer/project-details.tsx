@@ -23,12 +23,7 @@ import { proposalAPI } from "../../../api/proposals";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 
-const navItems = [
-    { label: "Dashboard", path: "/freelancer/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: "Browse Projects", path: "/freelancer/browse", icon: <Search className="w-5 h-5" /> },
-    { label: "My Proposals", path: "/freelancer/proposals", icon: <FileText className="w-5 h-5" /> },
-    { label: "Earnings", path: "/freelancer/earnings", icon: <DollarSign className="w-5 h-5" /> },
-];
+import { freelancerNavItems as navItems } from "../../../config/navigation";
 
 interface Project {
     _id: string;

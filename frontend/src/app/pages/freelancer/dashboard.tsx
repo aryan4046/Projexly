@@ -39,14 +39,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { format, subMonths, eachMonthOfInterval, isSameMonth, parseISO } from "date-fns";
 
-const navItems = [
-  { label: "Dashboard", path: "/freelancer/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "My Gigs", path: "/freelancer/my-gigs", icon: <Briefcase className="w-5 h-5" /> },
-  { label: "Manage Orders", path: "/orders", icon: <CheckCircle2 className="w-5 h-5" /> },
-  { label: "Browse Projects", path: "/freelancer/browse", icon: <Search className="w-5 h-5" /> },
-  { label: "My Proposals", path: "/freelancer/proposals", icon: <FileText className="w-5 h-5" /> },
-  { label: "Earnings", path: "/freelancer/earnings", icon: <DollarSign className="w-5 h-5" /> },
-];
+import { freelancerNavItems as navItems } from "../../../config/navigation";
 
 export function FreelancerDashboard() {
   const navigate = useNavigate();
@@ -83,86 +76,88 @@ export function FreelancerDashboard() {
   const [tempGoal, setTempGoal] = useState(earningsGoal.toString());
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("freelancer_todos", JSON.stringify(todos));
-  }, [todos]);
-
-  useEffect(() => {
     localStorage.setItem("earnings_goal", earningsGoal.toString());
   }, [earningsGoal]);
 
-  const fetchData = async () => {
-    try {
-      const userInfo = await authAPI.getMe();
-      setUser(userInfo);
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
 
-      const [gigs, orders, proposals, openProjects, conversations] = await Promise.all([
-        gigAPI.getMyGigs(),
-        orderAPI.getMyOrders(),
-        proposalAPI.getMyProposals(),
-        projectAPI.getOpenProjects(),
-        messageAPI.getConversations()
-      ]);
+    const fetchData = async () => {
+      try {
+        const userInfo = await authAPI.getMe();
+        setUser(userInfo);
 
-      // Filter orders for this seller
-      const myOrders = orders.filter((o: any) => o.seller._id === userInfo._id);
-      const activeOrders = myOrders.filter((o: any) => o.status === 'active');
-      const completedOrders = myOrders.filter((o: any) => o.status === 'completed');
+        const [gigs, orders, proposals, openProjects, conversations] = await Promise.all([
+          gigAPI.getMyGigs(),
+          orderAPI.getMyOrders(),
+          proposalAPI.getMyProposals(),
+          projectAPI.getOpenProjects(),
+          messageAPI.getConversations()
+        ]);
 
-      const earnings = completedOrders.reduce((sum: number, o: any) => sum + o.price, 0);
+        // Filter orders for this seller
+        const myOrders = orders.filter((o: any) => o.seller._id === userInfo._id);
+        const activeOrders = myOrders.filter((o: any) => o.status === 'active');
+        const completedOrders = myOrders.filter((o: any) => o.status === 'completed');
 
-      setStats({
-        activeGigs: gigs.length,
-        activeOrders: activeOrders.length,
-        completedOrders: completedOrders.length,
-        totalEarnings: earnings,
-        pendingProposals: proposals.length
-      });
+        const earnings = completedOrders.reduce((sum: number, o: any) => sum + o.price, 0);
 
-      setRecentOrders(activeOrders.slice(0, 3));
-      setRecommendedProjects(openProjects.slice(0, 3));
-      setInboxPreview(conversations.slice(0, 3));
+        setStats({
+          activeGigs: gigs.length,
+          activeOrders: activeOrders.length,
+          completedOrders: completedOrders.length,
+          totalEarnings: earnings,
+          pendingProposals: proposals.length
+        });
 
-      // Generate Activity Feed
-      const feed = [
-        ...activeOrders.map((o: any) => ({
-          type: 'order',
-          title: 'New Order Received',
-          desc: `Order for ${o.gig?.title || o.project?.title || 'Custom Service'}`,
-          date: new Date(o.createdAt),
-          icon: <Briefcase className="w-4 h-4 text-blue-500" />
-        })),
-        ...proposals.map((p: any) => ({
-          type: 'proposal',
-          title: 'Proposal Submitted',
-          desc: `For project: ${p.project.title}`,
-          date: new Date(p.createdAt),
-          icon: <FileText className="w-4 h-4 text-purple-500" />
-        }))
-      ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
-      setActivityFeed(feed);
+        setRecentOrders(activeOrders.slice(0, 3));
+        setRecommendedProjects(openProjects.slice(0, 3));
+        setInboxPreview(conversations.slice(0, 3));
 
-      // Generate Chart Data
-      const today = new Date();
-      const sixMonthsAgo = subMonths(today, 5);
-      const months = eachMonthOfInterval({ start: sixMonthsAgo, end: today });
-      const chartData = months.map(month => {
-        const amount = completedOrders
-          .filter((o: any) => isSameMonth(parseISO(o.createdAt), month))
-          .reduce((sum: number, o: any) => sum + o.price, 0);
-        return { name: format(month, 'MMM'), amount };
-      });
-      setMonthlyEarnings(chartData);
+        // Generate Activity Feed
+        const feed = [
+          ...activeOrders.map((o: any) => ({
+            type: 'order',
+            title: 'New Order Received',
+            desc: `Order for ${o.gig?.title || o.project?.title || 'Custom Service'}`,
+            date: new Date(o.createdAt),
+            icon: <Briefcase className="w-4 h-4 text-emerald-500" />
+          })),
+          ...proposals.map((p: any) => ({
+            type: 'proposal',
+            title: 'Proposal Submitted',
+            desc: `For project: ${p.project.title}`,
+            date: new Date(p.createdAt),
+            icon: <FileText className="w-4 h-4 text-teal-500" />
+          }))
+        ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
+        setActivityFeed(feed);
 
-    } catch (error) {
-      console.error("Failed to fetch dashboard data", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Generate Chart Data
+        const today = new Date();
+        const sixMonthsAgo = subMonths(today, 5);
+        const months = eachMonthOfInterval({ start: sixMonthsAgo, end: today });
+        const chartData = months.map(month => {
+          const amount = completedOrders
+            .filter((o: any) => isSameMonth(parseISO(o.createdAt), month))
+            .reduce((sum: number, o: any) => sum + o.price, 0);
+          return { name: format(month, 'MMM'), amount };
+        });
+        setMonthlyEarnings(chartData);
+
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // Poll for live updates every 10 seconds
+    interval = setInterval(fetchData, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -414,11 +409,11 @@ export function FreelancerDashboard() {
                       className="glass-card rounded-2xl p-6 transition-all hover:scale-[1.01] hover:shadow-xl border border-white/40 bg-white/60 relative overflow-hidden group cursor-pointer"
                       onClick={() => navigate(`/freelancer/projects/${project._id}`)}
                     >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-indigo-500/10" />
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-emerald-500/10" />
 
                       <div className="flex justify-between items-start relative z-10">
                         <div>
-                          <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{project.title}</h3>
+                          <h3 className="font-bold text-lg mb-2 group-hover:text-emerald-600 transition-colors">{project.title}</h3>
                           <p className="text-muted-foreground text-sm line-clamp-2 mb-4 max-w-2xl">{project.description}</p>
                           <div className="flex flex-wrap gap-2">
                             {(project.skills || []).slice(0, 3).map((skill: string) => (
@@ -429,7 +424,7 @@ export function FreelancerDashboard() {
                         <div className="text-right shrink-0 ml-4">
                           <div className="font-bold text-xl text-foreground mb-1">${project.budget}</div>
                           <div className="text-xs text-muted-foreground mb-3">Fixed Price</div>
-                          <Button size="sm" className="rounded-full">View Details</Button>
+                          <Button size="sm" className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all">View Details</Button>
                         </div>
                       </div>
                     </motion.div>
@@ -449,12 +444,12 @@ export function FreelancerDashboard() {
           <div className="space-y-8">
 
             {/* EARNINGS GOAL TRACKER */}
-            <Card className="p-6 border shadow-sm bg-gradient-to-br from-indigo-900 to-purple-900 text-white">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-indigo-300" /> Monthly Goal
-                </h2>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-indigo-300 hover:text-white" onClick={() => setIsEditingGoal(!isEditingGoal)}>
+            <Card className="p-6 border shadow-sm bg-gradient-to-br from-emerald-900 to-teal-900 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-emerald-300" /> Monthly Goal
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-emerald-300 hover:text-white" onClick={() => setIsEditingGoal(!isEditingGoal)}>
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </div>
@@ -467,16 +462,16 @@ export function FreelancerDashboard() {
                     onChange={(e) => setTempGoal(e.target.value)}
                     className="bg-white/10 border-white/20 text-white placeholder-white/50"
                   />
-                  <Button size="sm" onClick={handleGoalUpdate} className="w-full bg-indigo-500 hover:bg-indigo-600">Update Goal</Button>
+                  <Button size="sm" onClick={handleGoalUpdate} className="w-full bg-emerald-500 hover:bg-emerald-600">Update Goal</Button>
                 </div>
               ) : (
                 <>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-3xl font-bold">${currentMonthEarnings}</span>
-                    <span className="text-sm text-indigo-200 mb-1">/ ${earningsGoal}</span>
+                    <span className="text-sm text-emerald-200 mb-1">/ ${earningsGoal}</span>
                   </div>
                   <Progress value={goalProgress} className="h-3 bg-white/20" />
-                  <p className="text-xs text-indigo-200 mt-2 text-center">
+                  <p className="text-xs text-emerald-200 mt-2 text-center">
                     {goalProgress >= 100 ? "🎉 You hit your goal!" : `${Math.round(goalProgress)}% of your monthly target`}
                   </p>
                 </>
@@ -575,8 +570,8 @@ export function FreelancerDashboard() {
             </Card>
 
             {/* Quick Actions Card */}
-            <Card className="p-6 border shadow-sm bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
+            <Card className="p-6 border shadow-sm bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
               <h2 className="font-bold text-lg mb-4 relative z-10">Quick Actions</h2>
               <div className="space-y-3 relative z-10">
                 <Button className="w-full justify-start bg-white hover:bg-gray-50 text-foreground border shadow-sm" variant="outline" asChild>

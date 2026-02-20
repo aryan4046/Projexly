@@ -20,11 +20,7 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { projectAPI } from "../../../api/projects";
 
-const navItems = [
-    { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
-    { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
-];
+import { studentNavItems as navItems } from "../../../config/navigation";
 
 export function CreateProject() {
     const navigate = useNavigate();
@@ -104,7 +100,7 @@ export function CreateProject() {
     };
 
     return (
-        <DashboardLayout navItems={navItems} userType="student">
+        <DashboardLayout navItems={navItems} userType="student" theme="indigo">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="mb-8 flex items-center gap-4">

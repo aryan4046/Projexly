@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { gigAPI, Gig } from "@/api/gigs";
 import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     Plus,
@@ -11,11 +14,9 @@ import {
     Briefcase,
     Clock
 } from "lucide-react";
-import { DashboardLayout } from "@/app/components/dashboard-layout";
-import { Card, CardFooter, CardHeader } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
-import { motion } from "motion/react";
 import { toast } from "sonner";
+import { freelancerNavItems as navItems } from "../../../config/navigation";
+import { DashboardLayout } from "../../components/dashboard-layout";
 
 export function MyGigs() {
     const [gigs, setGigs] = useState<Gig[]>([]);
@@ -50,10 +51,7 @@ export function MyGigs() {
         }
     };
 
-    const navItems = [
-        { label: "Dashboard", path: "/freelancer/dashboard", icon: <Briefcase className="w-5 h-5" /> },
-        { label: "My Gigs", path: "/freelancer/my-gigs", icon: <Briefcase className="w-5 h-5" /> },
-    ];
+
 
     if (loading) return (
         <DashboardLayout navItems={navItems} userType="freelancer" theme="emerald">

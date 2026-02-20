@@ -4,6 +4,11 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const connectDB = require("./config/db");
+const session = require("express-session");
+const passport = require("passport");
+
+// Initialize Passport Strategies
+require("./config/passport");
 
 const app = express();
 
@@ -12,6 +17,22 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
+// Session Middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "projexly_secret_key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    },
+  })
+);
+
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/api/users", require("./routes/userRoutes"));

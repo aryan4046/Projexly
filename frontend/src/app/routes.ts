@@ -13,6 +13,7 @@ import { FreelancerProposals } from "./pages/freelancer/proposals";
 import { FreelancerEarnings } from "./pages/freelancer/earnings";
 import { Profile } from "./pages/profile";
 import { Settings } from "./pages/settings";
+import { OAuthCallback } from "./pages/oauth-callback";
 
 // New Pages
 import { CreateGig } from "./pages/freelancer/create-gig";
@@ -33,12 +34,20 @@ export const router = createBrowserRouter([
     Component: Profile,
   },
   {
+    path: "/profile/:id",
+    Component: Profile,
+  },
+  {
     path: "/login",
     Component: Login,
   },
   {
     path: "/register",
     Component: Register,
+  },
+  {
+    path: "/auth/oauth-callback",
+    Component: OAuthCallback,
   },
   {
     path: "/student/dashboard",
@@ -95,7 +104,7 @@ export const router = createBrowserRouter([
     Component: CreateGig,
   },
   {
-    path: "/freelancer/my-gigs",
+    path: "/freelancer/gigs",
     Component: MyGigs,
   },
   {

@@ -108,6 +108,27 @@ exports.acceptProposal = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// REJECT PROPOSAL (Client)
+exports.rejectProposal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`[API] Rejecting proposal ${id} by user ${req.user._id}`);
+
+    const proposal = await Proposal.findById(id);
+    if (!proposal) {
+      return res.status(404).json({ message: "Proposal not found" });
+    }
+
+    proposal.status = "rejected";
+    await proposal.save();
+
+    res.json({ message: "Proposal rejected", proposal });
+  } catch (error) {
+    console.error("[API] Reject Proposal Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 // GET RECEIVED PROPOSALS (Student/Client)
 exports.getReceivedProposals = async (req, res) => {
   try {

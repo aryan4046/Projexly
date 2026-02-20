@@ -22,11 +22,7 @@ import { projectAPI } from "../../../api/projects";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 
-const navItems = [
-    { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
-    { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
-];
+import { studentNavItems as navItems } from "../../../config/navigation";
 
 interface Project {
     _id: string;
@@ -86,7 +82,7 @@ export function StudentProjectDetails() {
 
     if (loading) {
         return (
-            <DashboardLayout navItems={navItems} userType="student">
+            <DashboardLayout navItems={navItems} userType="student" theme="indigo">
                 <div className="flex items-center justify-center h-[50vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
@@ -97,7 +93,7 @@ export function StudentProjectDetails() {
     if (!project) return null;
 
     return (
-        <DashboardLayout navItems={navItems} userType="student">
+        <DashboardLayout navItems={navItems} userType="student" theme="indigo">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6 flex items-center gap-4">
                     <Button
@@ -163,9 +159,9 @@ export function StudentProjectDetails() {
                                         {project.proposalsCount || 0}
                                     </div>
                                 </div>
-                                <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 flex flex-col items-center justify-center text-center">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Status</span>
-                                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 flex items-center capitalize">
+                                <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 flex flex-col items-center justify-center text-center">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1">Status</span>
+                                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 flex items-center capitalize">
                                         <CheckCircle2 className="w-5 h-5 mr-2" />
                                         {project.status}
                                     </div>

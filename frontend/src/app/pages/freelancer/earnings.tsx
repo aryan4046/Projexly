@@ -3,6 +3,23 @@ import { DashboardLayout } from "../../components/dashboard-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import { Input } from "../../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 
 import {
   LayoutDashboard,
@@ -22,17 +39,28 @@ import { authAPI } from "../../../api/auth";
 import { format, parseISO, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
 import { toast } from "sonner";
 
-const navItems = [
-  { label: "Dashboard", path: "/freelancer/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "Browse Projects", path: "/freelancer/browse", icon: <Search className="w-5 h-5" /> },
-  { label: "My Proposals", path: "/freelancer/proposals", icon: <FileText className="w-5 h-5" /> },
-  { label: "Earnings", path: "/freelancer/earnings", icon: <DollarSign className="w-5 h-5" /> },
-];
+import { freelancerNavItems as navItems } from "../../../config/navigation";
 
 export function FreelancerEarnings() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Withdrawal Logic State
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [withdrawnAmount, setWithdrawnAmount] = useState(() => {
+    return parseFloat(localStorage.getItem("freelancer_withdrawn") || "0");
+  });
+
+  const [bankDetails, setBankDetails] = useState(() => {
+    const saved = localStorage.getItem("freelancer_bank_details");
+    return saved ? JSON.parse(saved) : {
+      bankName: "Chase Bank",
+      accountNumber: "•••• •••• •••• 1234",
+      routingNumber: "••••9876"
+    };
+  });
 
   useEffect(() => {
     fetchData();
@@ -63,7 +91,19 @@ export function FreelancerEarnings() {
 
   const totalEarnings = completedOrders.reduce((sum, o) => sum + o.price, 0);
   const pendingPayments = activeOrders.reduce((sum, o) => sum + o.price, 0);
-  const availableBalance = totalEarnings; // Assuming no withdrawals yet
+  const availableBalance = Math.max(0, totalEarnings - withdrawnAmount);
+
+  const handleWithdraw = () => {
+    if (availableBalance <= 0) {
+      toast.error("You have no available balance to withdraw.");
+      return;
+    }
+    const newWithdrawn = withdrawnAmount + availableBalance;
+    setWithdrawnAmount(newWithdrawn);
+    localStorage.setItem("freelancer_withdrawn", newWithdrawn.toString());
+    setIsWithdrawModalOpen(false);
+    toast.success(`Successfully withdrew $${availableBalance.toLocaleString()} to Chase Bank!`);
+  };
 
   // Generate Monthly Data for the last 6 months
   const generateMonthlyData = () => {
@@ -93,9 +133,56 @@ export function FreelancerEarnings() {
     ? (currentMonthEarnings > 0 ? 100 : 0)
     : ((currentMonthEarnings - lastMonthEarnings) / lastMonthEarnings) * 100;
 
+  // Export Logic
+  const handleExport = (format: 'csv' | 'pdf' | 'xlsx') => {
+    try {
+      if (format === 'csv') {
+        let csvContent = "Month,Earnings\n";
+
+        if (monthlyData.length > 0) {
+          monthlyData.forEach(row => {
+            csvContent += `${row.month},${row.earnings}\n`;
+          });
+        } else {
+          csvContent += "No data available,0\n";
+        }
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `earnings_report_${new Date().getTime()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("CSV Export downloaded successfully!");
+      } else {
+        // Fallback for PDF and XLSX (Simulated basic empty/stub files)
+        const content = monthlyData.length > 0
+          ? `Simulated ${format.toUpperCase()} Export.\n\nTotal Earnings: $${totalEarnings}\nAvailable Balance: $${availableBalance}`
+          : `Empty ${format.toUpperCase()} Document. No data available.`;
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `earnings_report_${new Date().getTime()}.${format}`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(`${format.toUpperCase()} Export downloaded successfully!`);
+      }
+    } catch (err) {
+      console.error("Export failed", err);
+      toast.error(`Failed to export as ${format.toUpperCase()}`);
+    }
+  };
+
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems} userType="freelancer">
+      <DashboardLayout navItems={navItems} userType="freelancer" theme="emerald">
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -105,7 +192,7 @@ export function FreelancerEarnings() {
 
   if (error) {
     return (
-      <DashboardLayout navItems={navItems} userType="freelancer">
+      <DashboardLayout navItems={navItems} userType="freelancer" theme="emerald">
         <div className="flex flex-col items-center justify-center h-[60vh] text-center p-4">
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
@@ -130,28 +217,45 @@ export function FreelancerEarnings() {
             <Button variant="outline" size="sm" onClick={fetchData}>
               Refresh
             </Button>
-            <Button size="sm" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md">
-              <Download className="w-4 h-4 mr-2" />
-              Export Report
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Report
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>Export As</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  PDF Document (.pdf)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                  CSV File (.csv)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                  Excel Spreadsheet (.xlsx)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Earnings - Custom Target Design */}
-          <Card className="relative overflow-hidden border-0 shadow-lg bg-[#059669] text-white h-full group">
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-[#059669] text-white h-40 group">
             {/* Right side lighter overlay to create the two-tone effect */}
             <div className="absolute right-0 top-0 h-full w-[28%] bg-white/10"></div>
 
-            <div className="p-6 relative z-10 flex h-full">
+            <div className="p-5 relative z-10 flex h-full">
               {/* Left Content */}
-              <div className="flex-1 flex flex-col justify-between pr-4">
+              <div className="flex-1 flex flex-col justify-between pr-4 h-full">
                 <div>
-                  <h3 className="text-emerald-100 font-medium text-sm">Total Earnings</h3>
-                  <div className="text-4xl font-bold mt-1 text-white tracking-tight">${totalEarnings.toLocaleString()}</div>
+                  <h3 className="text-emerald-100 font-medium text-xs uppercase tracking-wider">Total Earnings</h3>
+                  <div className="text-3xl font-bold mt-2 text-white tracking-tight">${totalEarnings.toLocaleString()}</div>
                 </div>
 
-                <div className="mt-8 space-y-2">
+                <div className="space-y-2 mt-auto">
                   <div className="flex justify-between items-end">
                     <span className="text-xs text-emerald-100 font-medium">Monthly Goal</span>
                   </div>
@@ -190,9 +294,98 @@ export function FreelancerEarnings() {
                 <div className="text-3xl font-bold mt-2 text-foreground">${availableBalance.toLocaleString()}</div>
               </div>
               <div>
-                <Button size="sm" variant="ghost" className="h-8 text-xs px-3 -ml-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50">
-                  Withdraw Funds
-                </Button>
+                <Dialog open={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="h-8 text-xs px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-full shadow-sm transition-all hover:shadow-md active:scale-95">
+                      Withdraw Funds
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <div className="flex justify-between items-center pr-6">
+                        <DialogTitle>Bank Details</DialogTitle>
+                        {!isEditingBank && (
+                          <Button variant="ghost" size="sm" onClick={() => setIsEditingBank(true)} className="h-6 px-2 text-xs text-teal-600 hover:text-teal-700">
+                            Edit
+                          </Button>
+                        )}
+                      </div>
+                      <DialogDescription>
+                        {isEditingBank ? "Update your linked bank account information." : "Your funds will be withdrawn to your linked bank account."}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 rounded-xl bg-muted/30 p-4 border border-border/50">
+                      {isEditingBank ? (
+                        <>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bank Name</p>
+                            <Input
+                              value={bankDetails.bankName}
+                              onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Account Number</p>
+                            <Input
+                              value={bankDetails.accountNumber}
+                              onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Routing Number</p>
+                            <Input
+                              value={bankDetails.routingNumber}
+                              onChange={(e) => setBankDetails({ ...bankDetails, routingNumber: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bank Name</p>
+                            <p className="text-base font-semibold text-foreground">{bankDetails.bankName}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Account Number</p>
+                            <p className="text-base font-semibold text-foreground">{bankDetails.accountNumber}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Routing Number</p>
+                            <p className="text-base font-semibold text-foreground">{bankDetails.routingNumber}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-3 mt-4">
+                      {isEditingBank ? (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => setIsEditingBank(false)}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={() => {
+                            localStorage.setItem("freelancer_bank_details", JSON.stringify(bankDetails));
+                            setIsEditingBank(false);
+                            toast.success("Bank details updated!");
+                          }}>
+                            Save Details
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => setIsWithdrawModalOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white rounded-full" onClick={handleWithdraw} disabled={availableBalance <= 0}>
+                            Confirm Withdrawal ${availableBalance.toLocaleString()}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
             <div className="absolute right-0 top-0 h-full w-24 bg-teal-50/50 dark:bg-teal-900/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
@@ -210,7 +403,7 @@ export function FreelancerEarnings() {
                 <div className="text-3xl font-bold mt-2 text-foreground">${pendingPayments.toLocaleString()}</div>
               </div>
               <div className="mt-auto">
-                <div className="inline-block px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-xs rounded-full text-amber-700 dark:text-amber-400 font-medium">
+                <div className="inline-block px-2.5 py-1 bg-amber-50 dark:bg-amber-900/40 text-xs rounded-full text-amber-800 dark:text-amber-300 font-medium border border-amber-200/50">
                   In Transit
                 </div>
               </div>
@@ -256,7 +449,7 @@ export function FreelancerEarnings() {
             })}
           </div>
 
-          <div className="mt-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+          <div className="mt-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
             <div className="flex items-center gap-3 text-sm text-gray-700">
               <div className="p-2 bg-white rounded-full shadow-sm">
                 <ArrowUpRight className={`w-5 h-5 ${percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`} />

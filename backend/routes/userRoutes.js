@@ -7,10 +7,14 @@ const {
   getMe,
   updateProfile,
   deleteUser,
+  getUserById,
 } = require("../controllers/userController");
 
 // Get current user
 router.get("/me", protect, getMe);
+
+// Get user by id
+router.get("/:id", protect, getUserById);
 
 // Update profile
 router.put("/profile", protect, updateProfile);

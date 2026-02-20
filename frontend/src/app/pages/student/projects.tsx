@@ -41,11 +41,7 @@ interface Project {
   createdAt: string;
 }
 
-const navItems = [
-  { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
-  { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
-];
+import { studentNavItems as navItems } from "../../../config/navigation";
 
 export function StudentProjects() {
   const navigate = useNavigate();
@@ -85,7 +81,7 @@ export function StudentProjects() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems} userType="student">
+      <DashboardLayout navItems={navItems} userType="student" theme="indigo">
         <div className="flex items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -176,7 +172,7 @@ export function StudentProjects() {
   );
 
   return (
-    <DashboardLayout navItems={navItems} userType="student">
+    <DashboardLayout navItems={navItems} userType="student" theme="indigo">
       <div className="min-h-screen bg-transparent">
         {/* Header */}
         <div className="relative mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

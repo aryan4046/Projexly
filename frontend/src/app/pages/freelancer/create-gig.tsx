@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ArrowLeft, Briefcase, LayoutDashboard } from "lucide-react";
 import { DashboardLayout } from "../../components/dashboard-layout";
+import { freelancerNavItems as navItems } from "../../../config/navigation";
 
 interface CreateGigForm {
     title: string;
@@ -54,7 +55,7 @@ export function CreateGig() {
         } catch (error) {
             console.error("Failed to fetch gig details", error);
             toast.error("Failed to load gig details");
-            navigate("/freelancer/my-gigs");
+            navigate("/freelancer/gigs");
         } finally {
             setFetching(false);
         }
@@ -79,7 +80,7 @@ export function CreateGig() {
                 await gigAPI.create(formattedData);
                 toast.success("Gig created successfully!");
             }
-            navigate("/freelancer/my-gigs");
+            navigate("/freelancer/gigs");
         } catch (error) {
             console.error(error);
             toast.error(isEditing ? "Failed to update gig." : "Failed to create gig.");
@@ -90,15 +91,10 @@ export function CreateGig() {
 
     if (fetching) return <div className="text-center p-10">Loading gig details...</div>;
 
-    const navItems = [
-        { label: "Dashboard", path: "/freelancer/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-        { label: "My Gigs", path: "/freelancer/my-gigs", icon: <Briefcase className="w-5 h-5" /> },
-    ];
-
     return (
         <DashboardLayout navItems={navItems} userType="freelancer" theme="emerald">
             <div className="container mx-auto py-10 max-w-2xl">
-                <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate("/freelancer/my-gigs")}>
+                <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate("/freelancer/gigs")}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Gigs
                 </Button>
                 <Card>

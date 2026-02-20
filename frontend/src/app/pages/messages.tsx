@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/app/components/ui/utils";
 import { motion } from "motion/react";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 export function Messages() {
     const [conversations, setConversations] = useState<ConversationUser[]>([]);
@@ -28,31 +29,81 @@ export function Messages() {
     const [newMessage, setNewMessage] = useState("");
     const [currentUser, setCurrentUser] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
 
-    // Derived state for theming
-    const userRole = currentUser?.role || "student";
-    const theme = userRole === "freelancer" ? "emerald" : "indigo";
-    const secondaryTheme = userRole === "freelancer" ? "teal" : "purple";
+    // Derived state for theming based on user role and context
+    // If the user arrived from the freelancer dashboard or is a freelancer, use emerald
+    // Otherwise use indigo
+    const isFreelancerContext = location.pathname.includes('/freelancer') || currentUser?.role === 'freelancer';
+    const theme = isFreelancerContext ? "emerald" : "indigo";
+    const secondaryTheme = isFreelancerContext ? "teal" : "purple";
 
     useEffect(() => {
         const init = async () => {
             const user = await authAPI.getMe();
             setCurrentUser(user);
             const convos = await messageAPI.getConversations();
-            setConversations(convos);
+
+            // Handle direct message linking from other pages
+            const newChatId = searchParams.get('newChat');
+            if (newChatId) {
+                // If it's already in our conversations list, just select it
+                const existing = convos.find((c: ConversationUser) => c._id === newChatId);
+                if (existing) {
+                    setSelectedUser(existing);
+                    setConversations(convos);
+                } else {
+                    // Try to fetch this user's details and inject them into the conversation list
+                    try {
+                        const newChatUser = await authAPI.getUserById(newChatId);
+                        const newConvo = {
+                            _id: newChatUser._id,
+                            name: newChatUser.name,
+                            role: newChatUser.role,
+                            email: newChatUser.email
+                        };
+                        setConversations([newConvo, ...convos]);
+                        setSelectedUser(newConvo);
+                    } catch (e) {
+                        console.error("Could not fetch new chat user", e);
+                        setConversations(convos);
+                    }
+                }
+
+                // Clear the URL param so refreshing doesn't keep triggering it
+                searchParams.delete('newChat');
+                setSearchParams(searchParams, { replace: true });
+            } else {
+                setConversations(convos);
+            }
         };
         init();
-    }, []);
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+
         if (selectedUser) {
             const fetchMessages = async () => {
                 const msgs = await messageAPI.getMessages(selectedUser._id);
-                setMessages(msgs);
+                // Only update if we actually have different messages to avoid scrolling bounce
+                setMessages(prev => {
+                    if (prev.length === msgs.length) return prev;
+                    return msgs;
+                });
             };
+
+            // Initial fetch
             fetchMessages();
-            // Polling for new messages could go here
+
+            // Polling for new messages every 3 seconds for near-real-time feel
+            interval = setInterval(fetchMessages, 3000);
         }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, [selectedUser]);
 
     useEffect(() => {
@@ -227,13 +278,13 @@ export function Messages() {
                                                             "rounded-2xl px-5 py-3 text-sm shadow-md backdrop-blur-sm transition-all relative group",
                                                             isMe
                                                                 ? `bg-gradient-to-br from-${theme}-600 to-${secondaryTheme}-600 text-white rounded-tr-sm`
-                                                                : "bg-white dark:bg-zinc-800 border border-border/50 text-foreground rounded-tl-sm hover:bg-gray-50 dark:hover:bg-zinc-700/80"
+                                                                : "bg-white dark:bg-zinc-800 border border-border/50 text-slate-900 dark:text-white rounded-tl-sm hover:bg-gray-50 dark:hover:bg-zinc-700/80"
                                                         )}
                                                     >
                                                         <p className="leading-relaxed">{msg.message}</p>
                                                         <p className={cn(
                                                             "text-[10px] mt-1.5 text-right font-medium opacity-70",
-                                                            isMe ? "text-blue-100" : "text-muted-foreground"
+                                                            isMe ? "text-blue-100" : "text-slate-500 dark:text-zinc-400"
                                                         )}>
                                                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             {isMe && <span className="ml-1">✓✓</span>}
@@ -252,7 +303,7 @@ export function Messages() {
                                                 value={newMessage}
                                                 onChange={(e) => setNewMessage(e.target.value)}
                                                 placeholder="Type a message..."
-                                                className="border-none shadow-none bg-transparent focus-visible:ring-0 p-0 h-10 placeholder:text-muted-foreground/50"
+                                                className="border-0 shadow-none focus-visible:ring-0 bg-transparent px-2 h-10 w-full"
                                             />
                                             <div className="flex gap-1 mr-1">
                                                 <Button type="button" size="icon" variant="ghost" className={`h-8 w-8 rounded-full text-muted-foreground hover:text-${theme}-600 hover:bg-${theme}-500/10 transition-colors`}>
@@ -267,8 +318,8 @@ export function Messages() {
                                         <Button
                                             type="submit"
                                             size="icon"
+                                            className={`h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 bg-gradient-to-r from-${theme}-600 to-${secondaryTheme}-600 text-white`}
                                             disabled={!newMessage.trim()}
-                                            className={`h-12 w-12 rounded-full shadow-lg shadow-${theme}-500/25 bg-gradient-to-r from-${theme}-600 to-${secondaryTheme}-600 hover:scale-105 active:scale-95 transition-all duration-300 hover:shadow-${theme}-500/40`}
                                         >
                                             <Send className="h-5 w-5 text-white" />
                                         </Button>

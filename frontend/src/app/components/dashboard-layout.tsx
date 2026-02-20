@@ -196,7 +196,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                           className={`flex items-start gap-3 p-3 rounded-lg mb-2 hover:bg-muted cursor-pointer transition-colors ${notification.unread ? "bg-muted/50" : ""
                             }`}
                         >
-                          <div className="w-2 h-2 mt-2 rounded-full bg-indigo-600 flex-shrink-0" />
+                          <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${theme === 'emerald' ? 'bg-emerald-600' : 'bg-indigo-600'}`} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">
                               {notification.title}
@@ -392,7 +392,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                        ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                        ? `${currentTheme.bgAccent} ${currentTheme.textAccent} border ${currentTheme.borderAccent}`
                         : "text-muted-foreground hover:bg-black/5 hover:text-foreground"
                         }`}
                     >

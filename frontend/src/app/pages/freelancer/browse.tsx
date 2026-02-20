@@ -17,12 +17,7 @@ import {
 import { projectAPI } from "../../../api/projects";
 import { toast } from "sonner";
 
-const navItems = [
-  { label: "Dashboard", path: "/freelancer/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "Browse Projects", path: "/freelancer/browse", icon: <SearchIcon className="w-5 h-5" /> },
-  { label: "My Proposals", path: "/freelancer/proposals", icon: <FileText className="w-5 h-5" /> },
-  { label: "Earnings", path: "/freelancer/earnings", icon: <DollarSign className="w-5 h-5" /> },
-];
+import { freelancerNavItems as navItems } from "../../../config/navigation";
 
 export function FreelancerBrowse() {
   const navigate = useNavigate();

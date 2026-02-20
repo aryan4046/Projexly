@@ -45,7 +45,7 @@ export const proposalAPI = {
         return response.data;
     },
     reject: async (id: string) => {
-        const response = await api.put(`/proposals/${id}`, { status: 'rejected' });
+        const response = await api.put(`/proposals/${id}/reject`, { status: 'rejected' });
         return response.data;
     }
 };

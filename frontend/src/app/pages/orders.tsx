@@ -33,6 +33,28 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 
+const getThemeStyles = (role: string) => {
+    // Return the primary Indigo/Purple theme universally for the Orders page
+    return {
+        gradientText: "from-indigo-600 to-purple-600",
+        textMain: "text-indigo-600",
+        bgMainHover: "hover:bg-indigo-600",
+        textHover: "hover:text-indigo-600",
+        bgMain: "bg-indigo-600",
+        shadowMain: "shadow-indigo-500/20",
+        goBackHover: "hover:shadow-indigo-500/20 hover:border-indigo-500/50",
+        goBackIconBg: "bg-indigo-500/10 group-hover:bg-indigo-500/20",
+        goBackIcon: "text-indigo-600",
+        tabActiveText: "group-data-[state=active]:text-indigo-600",
+        tabActiveBorder: "data-[state=active]:border-indigo-500",
+        tabAccent: "bg-indigo-500",
+        tabSecondaryAccent: "bg-purple-500",
+        tabSecondaryActiveText: "group-data-[state=active]:text-purple-600",
+        tabSecondaryActiveBorder: "data-[state=active]:border-purple-500",
+        btnSubmit: "bg-indigo-600 hover:bg-indigo-700",
+    };
+};
+
 export function Orders() {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<any[]>([]);
@@ -43,8 +65,7 @@ export function Orders() {
     const [deliveryLink, setDeliveryLink] = useState("");
     const [openDeliveryDialog, setOpenDeliveryDialog] = useState(false);
 
-    const theme = userRole === "freelancer" ? "emerald" : "indigo";
-    const secondaryTheme = userRole === "freelancer" ? "teal" : "purple";
+    const styles = getThemeStyles(userRole);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -167,7 +188,7 @@ export function Orders() {
                         <div className="flex flex-col md:flex-row justify-between gap-4">
                             <div className="space-y-3 flex-1">
                                 <div className="flex justify-between items-start">
-                                    <Link to={`/gigs/${order.gig?._id}`} className={`font-bold text-xl hover:text-${theme}-600 transition-colors line-clamp-1`}>
+                                    <Link to={`/gigs/${order.gig?._id}`} className={`font-bold text-xl ${styles.textHover} transition-colors line-clamp-1`}>
                                         {order.gig?.title || order.project?.title || "Custom Order"}
                                     </Link>
                                     <div className="md:hidden font-bold text-lg text-primary">
@@ -234,7 +255,7 @@ export function Orders() {
                                     </Button>
 
                                     {isSelling && order.status === "active" && (
-                                        <Button size="sm" className={`flex-1 md:flex-none bg-${theme}-600 hover:bg-${theme}-700 rounded-full shadow-lg shadow-${theme}-200`} onClick={() => { setSelectedOrder(order); setOpenDeliveryDialog(true); }}>
+                                        <Button size="sm" className={`flex-1 md:flex-none ${styles.bgMain} ${styles.bgMainHover} rounded-full shadow-lg ${styles.shadowMain}`} onClick={() => { setSelectedOrder(order); setOpenDeliveryDialog(true); }}>
                                             <Upload className="w-4 h-4 mr-2" />
                                             Deliver
                                         </Button>
@@ -287,10 +308,10 @@ export function Orders() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => navigate(-1)}
-                    className={`absolute top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-2 px-5 py-2.5 bg-background/40 backdrop-blur-xl border border-white/10 rounded-full shadow-lg hover:shadow-${theme}-500/20 hover:border-${theme}-500/50 hover:bg-background/60 transition-all duration-300 group`}
+                    className={`absolute top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-2 px-5 py-2.5 bg-background/40 backdrop-blur-xl border border-white/10 rounded-full shadow-lg ${styles.goBackHover} hover:bg-background/60 transition-all duration-300 group`}
                 >
-                    <div className={`bg-${theme}-500/10 p-1 rounded-full group-hover:bg-${theme}-500/20 transition-colors`}>
-                        <ArrowLeft className={`w-4 h-4 text-${theme}-600 group-hover:-translate-x-0.5 transition-transform`} />
+                    <div className={`${styles.goBackIconBg} p-1 rounded-full transition-colors`}>
+                        <ArrowLeft className={`w-4 h-4 ${styles.goBackIcon} group-hover:-translate-x-0.5 transition-transform`} />
                     </div>
                     <span className="font-medium text-sm text-muted-foreground group-hover:text-foreground transition-colors">Go Back</span>
                 </motion.button>
@@ -302,7 +323,7 @@ export function Orders() {
                         transition={{ duration: 0.6 }}
                     >
                         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">
-                            Manage your <span className={`text-${theme}-600 bg-clip-text text-transparent bg-gradient-to-r from-${theme}-600 to-${secondaryTheme}-600`}>Orders</span> & Deliveries
+                            Manage your <span className={`${styles.textMain} bg-clip-text text-transparent bg-gradient-to-r ${styles.gradientText}`}>Orders</span> & Deliveries
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
                             Track the progress of your orders and manage deliveries with ease.
@@ -314,23 +335,38 @@ export function Orders() {
             <div className="container mx-auto py-12 px-4 max-w-6xl relative z-10">
 
                 <Tabs defaultValue="buying" className="w-full">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                        <TabsList className="grid w-full max-w-[460px] h-14 grid-cols-2 p-1.5 bg-white/60 items-center justify-center rounded-full border border-white/40 backdrop-blur-xl shadow-lg relative overflow-hidden">
-                            <div className={`absolute inset-0 bg-gradient-to-r from-${theme}-50/30 to-${secondaryTheme}-50/30 opacity-50`} />
+                    <div className="mb-12 w-full max-w-2xl mx-auto">
+                        <TabsList className="bg-transparent border-0 h-auto p-0 flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full">
                             <TabsTrigger
                                 value="buying"
-                                className={`rounded-full flex items-center justify-center gap-2 h-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-${theme}-600 data-[state=active]:to-${secondaryTheme}-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 text-sm font-medium hover:text-foreground relative z-10`}
+                                className={`group relative w-full sm:w-1/2 bg-card/40 hover:bg-card/80 border border-border/50 shadow-sm data-[state=active]:bg-background ${styles.tabActiveBorder} data-[state=active]:border-b-4 rounded-2xl p-4 sm:p-5 transition-all duration-300 overflow-hidden text-left flex items-start gap-4`}
                             >
-                                Buying <Badge variant="secondary" className="px-1.5 h-5 min-w-[20px] flex items-center justify-center rounded-full text-[10px] bg-white/20 text-foreground group-data-[state=active]:text-white group-data-[state=active]:bg-white/20 transition-colors">{buyingOrders.length}</Badge>
+                                <div className={`absolute -right-8 -bottom-8 w-24 h-24 ${styles.tabAccent} opacity-0 group-data-[state=active]:opacity-5 blur-2xl transition-opacity`} />
+
+                                <div className="p-3.5 rounded-2xl bg-muted/60 text-muted-foreground group-data-[state=active]:bg-background group-data-[state=active]:shadow-sm transition-all shadow-none">
+                                    <Package className={`w-6 h-6 ${styles.tabActiveText}`} />
+                                </div>
+                                <div className="flex flex-col pt-1">
+                                    <span className="text-lg font-bold text-muted-foreground group-data-[state=active]:text-foreground transition-colors">Buying</span>
+                                    <span className="text-sm font-medium text-muted-foreground/80 mt-0.5">{buyingOrders.length} Order{buyingOrders.length !== 1 ? 's' : ''}</span>
+                                </div>
                             </TabsTrigger>
+
                             <TabsTrigger
                                 value="selling"
-                                className={`rounded-full flex items-center justify-center gap-2 h-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-${theme}-600 data-[state=active]:to-${secondaryTheme}-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 text-sm font-medium hover:text-foreground relative z-10`}
+                                className={`group relative w-full sm:w-1/2 bg-card/40 hover:bg-card/80 border border-border/50 shadow-sm data-[state=active]:bg-background ${styles.tabSecondaryActiveBorder} data-[state=active]:border-b-4 rounded-2xl p-4 sm:p-5 transition-all duration-300 overflow-hidden text-left flex items-start gap-4`}
                             >
-                                Selling <Badge variant="secondary" className="px-1.5 h-5 min-w-[20px] flex items-center justify-center rounded-full text-[10px] bg-white/20 text-foreground group-data-[state=active]:text-white group-data-[state=active]:bg-white/20 transition-colors">{sellingOrders.length}</Badge>
+                                <div className={`absolute -right-8 -bottom-8 w-24 h-24 ${styles.tabSecondaryAccent} opacity-0 group-data-[state=active]:opacity-5 blur-2xl transition-opacity`} />
+
+                                <div className="p-3.5 rounded-2xl bg-muted/60 text-muted-foreground group-data-[state=active]:bg-background group-data-[state=active]:shadow-sm transition-all shadow-none">
+                                    <Upload className={`w-6 h-6 ${styles.tabSecondaryActiveText}`} />
+                                </div>
+                                <div className="flex flex-col pt-1">
+                                    <span className="text-lg font-bold text-muted-foreground group-data-[state=active]:text-foreground transition-colors">Selling</span>
+                                    <span className="text-sm font-medium text-muted-foreground/80 mt-0.5">{sellingOrders.length} Order{sellingOrders.length !== 1 ? 's' : ''}</span>
+                                </div>
                             </TabsTrigger>
                         </TabsList>
-                        {/* Potential Filter Dropdown could go here */}
                     </div>
 
                     <TabsContent value="buying" className="space-y-4 mt-0">
@@ -376,7 +412,7 @@ export function Orders() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setOpenDeliveryDialog(false)}>Cancel</Button>
-                            <Button onClick={handleDeliver} className={`bg-${theme}-600 hover:bg-${theme}-700`}>
+                            <Button onClick={handleDeliver} className={styles.btnSubmit}>
                                 Send Delivery
                             </Button>
                         </DialogFooter>

@@ -3,6 +3,7 @@ import { DashboardLayout } from "../../components/dashboard-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import { freelancerNavItems } from "@/config/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
 import { Progress } from "../../components/ui/progress";
 import {
@@ -220,9 +221,7 @@ export function FreelancerProposals() {
   });
 
   return (
-    <DashboardLayout navItems={[
-      { label: "Dashboard", path: "/freelancer/dashboard", icon: <ArrowLeft className="w-5 h-5" /> }, // Keeping generic for now
-    ]} userType="freelancer" theme="emerald">
+    <DashboardLayout navItems={freelancerNavItems} userType="freelancer" theme="emerald">
       <div className="max-w-6xl mx-auto py-8 px-4 space-y-8">
 
         {/* Header */}
@@ -276,7 +275,7 @@ export function FreelancerProposals() {
               <div>
                 <h3 className="text-muted-foreground text-sm font-medium">Pending Review</h3>
                 <div className="text-3xl font-bold mt-2 text-foreground">{proposals.filter(p => p.status === 'pending').length}</div>
-                <div className="mt-2 inline-block px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-xs rounded-full text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1">
+                <div className="mt-2 inline-block px-2.5 py-1 bg-amber-50 dark:bg-amber-900/40 text-xs rounded-full text-amber-800 dark:text-amber-300 font-medium flex items-center gap-1 border border-amber-200/50">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                   Awaiting Action
                 </div>
@@ -295,7 +294,7 @@ export function FreelancerProposals() {
               <div>
                 <h3 className="text-muted-foreground text-sm font-medium">Accepted</h3>
                 <div className="text-3xl font-bold mt-2 text-foreground">{proposals.filter(p => p.status === 'accepted').length}</div>
-                <div className="mt-2 inline-block px-2.5 py-1 bg-teal-100 dark:bg-teal-900/30 text-xs rounded-full text-teal-700 dark:text-teal-400 font-medium">
+                <div className="mt-2 inline-block px-2.5 py-1 bg-teal-50 dark:bg-teal-900/40 text-xs rounded-full text-teal-800 dark:text-teal-300 font-medium border border-teal-200/50">
                   Active Projects
                 </div>
               </div>

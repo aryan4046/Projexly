@@ -33,14 +33,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const navItems = [
-  { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "Find Services", path: "/gigs", icon: <DollarSign className="w-5 h-5" /> },
-  { label: "My Orders", path: "/orders", icon: <TrendingUp className="w-5 h-5" /> },
-  { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
-  { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
-  { label: "Settings", path: "/settings", icon: <Settings className="w-5 h-5" /> },
-];
+import { studentNavItems as navItems } from "../../../config/navigation";
 
 export function StudentDashboard() {
   const navigate = useNavigate();
@@ -280,7 +273,7 @@ export function StudentDashboard() {
             value={`$${totalSpent}`}
             icon={<DollarSign className="w-6 h-6" />}
             trend="+12% vs last month"
-            colorName="emerald"
+            colorName="teal"
             delay={0.3}
           />
           <StatsCard
@@ -288,7 +281,7 @@ export function StudentDashboard() {
             value={totalProposals}
             icon={<FileText className="w-6 h-6" />}
             trend="Received"
-            colorName="purple"
+            colorName="fuchsia"
             delay={0.4}
           />
         </div>
@@ -335,8 +328,8 @@ export function StudentDashboard() {
                 {activeOrders.length > 0 ? (
                   activeOrders.slice(0, 3).map((order: any) => (
                     <div key={order._id} className="flex gap-4 items-start p-3 rounded-xl bg-background border hover:border-primary/50 transition-colors cursor-pointer" onClick={() => navigate('/orders')}>
-                      <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-5 h-5 text-indigo-600" />
+                      <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center border border-teal-200 dark:border-teal-800 shrink-0">
+                        <DollarSign className="w-4 h-4 text-teal-600" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-semibold truncate text-foreground">{order.gig.title}</h3>
@@ -477,14 +470,14 @@ function StatsCard({ title, value, icon, trend, colorName, delay }: any) {
       hoverBg: "group-hover:bg-amber-100/50",
       text: "text-amber-600",
     },
-    emerald: {
-      border: "border-b-emerald-500",
-      bg: "bg-emerald-50/50",
-      hoverBg: "group-hover:bg-emerald-100/50",
-      text: "text-emerald-600",
+    teal: {
+      border: "border-b-teal-500",
+      bg: "bg-teal-50/50",
+      hoverBg: "group-hover:bg-teal-100/50",
+      text: "text-teal-600",
     },
-    purple: {
-      border: "border-b-purple-500",
+    fuchsia: {
+      border: "border-b-fuchsia-500",
       bg: "bg-purple-50/50",
       hoverBg: "group-hover:bg-purple-100/50",
       text: "text-purple-600",

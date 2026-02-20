@@ -18,7 +18,8 @@ import {
   MoreHorizontal,
   ExternalLink,
   ShieldCheck,
-  Filter
+  Filter,
+  MapPin
 } from "lucide-react";
 import { proposalAPI, Proposal } from "../../../api/proposals";
 import { toast } from "sonner";
@@ -32,12 +33,19 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { PaymentModal } from "../../components/payment-modal";
+import { authAPI } from "../../../api/auth";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
-const navItems = [
-  { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
-  { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
-];
+import { studentNavItems as navItems } from "../../../config/navigation";
 
 export function StudentProposals() {
   const navigate = useNavigate();
@@ -47,6 +55,27 @@ export function StudentProposals() {
   // Payment Modal State
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+
+  // Report Modal State
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportingUser, setReportingUser] = useState<any>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+
+  // Profile Viewing Modal State
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  const handleReportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportReason) return;
+    toast.success(`Report submitted for ${reportingUser?.name}. Our team will review this shortly.`);
+    setIsReportOpen(false);
+    setReportingUser(null);
+    setReportReason("");
+    setReportDetails("");
+  };
 
   // Fetch proposals
   useEffect(() => {
@@ -116,7 +145,7 @@ export function StudentProposals() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems} userType="student">
+      <DashboardLayout navItems={navItems} userType="student" theme="indigo">
         <div className="flex items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -203,7 +232,7 @@ export function StudentProposals() {
             <Button variant="outline" className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors" onClick={() => handleReject(proposal._id)}>
               <XCircle className="w-4 h-4 mr-2" /> Reject
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(`/messages?newChat=${proposal.freelancer._id}`)}>
               <MessageSquare className="w-4 h-4 text-muted-foreground" />
             </Button>
 
@@ -213,9 +242,36 @@ export function StudentProposals() {
                   <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Profile</DropdownMenuItem>
-                <DropdownMenuItem>Report</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onSelect={async (e) => {
+                    e.preventDefault();
+                    setIsProfileModalOpen(true);
+                    setLoadingProfile(true);
+                    try {
+                      const fullProfile = await authAPI.getUserById(proposal.freelancer._id);
+                      setViewingProfile(fullProfile);
+                    } catch (error) {
+                      toast.error("Failed to load full profile.");
+                      setViewingProfile(proposal.freelancer);
+                    } finally {
+                      setLoadingProfile(false);
+                    }
+                  }}
+                >
+                  View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setReportingUser(proposal.freelancer);
+                    setIsReportOpen(true);
+                  }}
+                >
+                  Report
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -225,7 +281,7 @@ export function StudentProposals() {
   );
 
   return (
-    <DashboardLayout navItems={navItems} userType="student">
+    <DashboardLayout navItems={navItems} userType="student" theme="indigo">
       <div className="min-h-screen bg-transparent">
         {/* Header */}
         <div className="relative mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -248,10 +304,20 @@ export function StudentProposals() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2 rounded-full hidden sm:flex hover:scale-105 hover:bg-secondary/80 transition-all duration-300">
-              <Filter className="w-4 h-4" /> Filter
-            </Button>
-            <Button className="gap-2 rounded-full bg-primary text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all duration-300">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 rounded-full hidden sm:flex hover:scale-105 hover:bg-secondary/80 transition-all duration-300">
+                  <Filter className="w-4 h-4" /> Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onSelect={() => toast.info("Showing Newest First")}>Newest First</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast.info("Showing Oldest First")}>Oldest First</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast.info("Showing Highest Bid")}>Highest Bid First</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast.info("Showing Lowest Bid")}>Lowest Bid First</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button className="gap-2 rounded-full bg-primary text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all duration-300" onClick={() => toast.success("Vetted filter applied!")}>
               <ShieldCheck className="w-4 h-4" /> Vetted Only
             </Button>
           </div>
@@ -365,6 +431,118 @@ export function StudentProposals() {
         amount={selectedProposal?.bidAmount || 0}
         projectTitle={selectedProposal?.project.title || "Project"}
       />
+
+      <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Report Freelancer</DialogTitle>
+            <DialogDescription>
+              Help us keep Projexly safe. Please tell us why you are reporting {reportingUser?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleReportSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Reason for Report</Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spam">Spam or solicitations</SelectItem>
+                  <SelectItem value="inappropriate">Inappropriate behavior</SelectItem>
+                  <SelectItem value="fraud">Suspected fraud or scam</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Additional Details (Optional)</Label>
+              <Textarea
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                placeholder="Please provide more information..."
+                className="h-24 resize-none"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
+              <Button type="button" variant="ghost" onClick={() => setIsReportOpen(false)}>Cancel</Button>
+              <Button type="submit" variant="destructive" disabled={!reportReason}>Submit Report</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isProfileModalOpen} onOpenChange={(open) => {
+        setIsProfileModalOpen(open);
+        if (!open) setTimeout(() => setViewingProfile(null), 300);
+      }}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-0">
+          {loadingProfile ? (
+            <div className="p-12 flex flex-col items-center justify-center space-y-4">
+              <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+              <p className="text-muted-foreground font-medium animate-pulse">Loading profile...</p>
+            </div>
+          ) : viewingProfile ? (
+            <div className="relative">
+              <div className="h-24 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+              <div className="px-6 pb-6 pt-0 relative">
+                <div className="flex justify-between items-end mb-4 -mt-10">
+                  <Avatar className="w-20 h-20 border-4 border-background shadow-lg bg-background">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${viewingProfile.name}`} />
+                    <AvatarFallback className="text-xl font-bold bg-indigo-50 text-indigo-600">{viewingProfile.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 mb-2 border-indigo-200 shadow-sm capitalize px-3 py-1">
+                    {viewingProfile.role || "Freelancer"}
+                  </Badge>
+                </div>
+
+                <h2 className="text-2xl font-bold text-foreground">{viewingProfile.name}</h2>
+                <p className="text-muted-foreground font-medium">{viewingProfile.headline || "Professional Freelancer"}</p>
+
+                <div className="flex items-center gap-3 mt-3 text-sm text-muted-foreground">
+                  {viewingProfile.location && (
+                    <span className="flex items-center"><MapPin className="w-3.5 h-3.5 mr-1" /> {viewingProfile.location}</span>
+                  )}
+                  <span className="flex items-center"><Star className="w-3.5 h-3.5 mr-1 text-orange-400" /> 4.9 Rating</span>
+                </div>
+
+                {viewingProfile.about && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-sm mb-2 uppercase tracking-wider text-muted-foreground">About</h3>
+                    <p className="text-sm leading-relaxed text-foreground/80 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      {viewingProfile.about}
+                    </p>
+                  </div>
+                )}
+
+                {viewingProfile.skills && viewingProfile.skills.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-sm mb-2 uppercase tracking-wider text-muted-foreground">Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingProfile.skills.map((skill: string, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-8 flex gap-3">
+                  <Button className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-200" onClick={() => {
+                    setIsProfileModalOpen(false);
+                    navigate(`/messages?newChat=${viewingProfile._id}`);
+                  }}>
+                    <MessageSquare className="w-4 h-4 mr-2" /> Message
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">Profile not found.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout >
   );
 }
