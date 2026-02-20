@@ -14,7 +14,7 @@ export function Login() {
   const [userType, setUserType] = useState<"student" | "freelancer">("student");
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function Login() {
 
   const handleResendOTP = async () => {
     try {
-      setCountdown(15);
+      setCountdown(60);
       setCanResend(false);
       setOtp("");
       await authAPI.resendOTP({ email });
@@ -187,7 +187,7 @@ export function Login() {
                     Resend OTP
                   </button>
                 )}
-                <button type="button" onClick={() => { setShowOTP(false); setCountdown(15); setCanResend(false); }} className="text-muted-foreground hover:underline mt-2">
+                <button type="button" onClick={() => { setShowOTP(false); setCountdown(60); setCanResend(false); }} className="text-muted-foreground hover:underline mt-2">
                   Back to login
                 </button>
               </div>

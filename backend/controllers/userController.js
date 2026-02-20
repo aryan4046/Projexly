@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
     // Generate a 6-digit OTP
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(rawOtp, 10);
-    const otpExpires = new Date(Date.now() + 15 * 1000); // 15 seconds
+    const otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
 
     const user = await User.create({
       name,
@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
       await sendEmail({
         to: user.email,
         subject: "Projexly - Verify your email",
-        text: `Your OTP is ${rawOtp}. It is valid for 15 seconds.`,
+        text: `Your OTP is ${rawOtp}. It is valid for 60 seconds.`,
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
           <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
@@ -57,7 +57,7 @@ exports.register = async (req, res) => {
           <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
           </div>
-          <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 15 seconds.</p>
+          <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 60 seconds.</p>
           <p style="color: #64748b; font-size: 14px; text-align: center;">Please hurry and enter the code on the verification screen.</p>
           <p style="color: #64748b; font-size: 14px; margin-top: 20px;">If you didn't attempt to create an account, you can safely ignore this email.</p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
@@ -109,14 +109,14 @@ exports.login = async (req, res) => {
       // Generate a new OTP if trying to log in but unverified
       const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
       user.otp = await bcrypt.hash(rawOtp, 10);
-      user.otpExpires = new Date(Date.now() + 15 * 1000); // 15 seconds
+      user.otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
       await user.save();
 
       try {
         await sendEmail({
           to: user.email,
           subject: "Projexly - Verify your email",
-          text: `Your new OTP is ${rawOtp}. It is valid for 15 seconds.`,
+          text: `Your new OTP is ${rawOtp}. It is valid for 60 seconds.`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
               <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
@@ -125,7 +125,7 @@ exports.login = async (req, res) => {
               <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
                 <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
               </div>
-              <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 15 seconds.</p>
+              <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 60 seconds.</p>
               <p style="color: #64748b; font-size: 14px; text-align: center;">Enter this code promptly to gain access to your account.</p>
               <p style="color: #64748b; font-size: 14px; margin-top: 20px;">If you didn't request this code or attempt to log in, please reset your password immediately and secure your account.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
@@ -241,14 +241,14 @@ exports.resendOTP = async (req, res) => {
 
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = await bcrypt.hash(rawOtp, 10);
-    user.otpExpires = new Date(Date.now() + 15 * 1000); // 15 seconds
+    user.otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
     await user.save();
 
     try {
       await sendEmail({
         to: user.email,
         subject: "Projexly - New OTP Request",
-        text: `Your new OTP is ${rawOtp}. It expires in 15 seconds.`,
+        text: `Your new OTP is ${rawOtp}. It expires in 60 seconds.`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
             <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
@@ -257,7 +257,7 @@ exports.resendOTP = async (req, res) => {
             <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
               <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
             </div>
-            <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 15 seconds.</p>
+            <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 60 seconds.</p>
             <p style="color: #64748b; font-size: 14px; text-align: center;">Please return to the verification screen and enter this code quickly.</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
             <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Projexly. All rights reserved.</p>

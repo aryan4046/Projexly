@@ -7,6 +7,7 @@ const {
   register: registerUser,
   login: loginUser,
   verifyOTP,
+  resendOTP,
 } = require("../controllers/userController");
 
 // Register
