@@ -5,6 +5,7 @@ import { messageAPI } from "../../api/messages";
 import { notificationAPI, Notification } from "../../api/notifications";
 import { io, Socket } from "socket.io-client";
 import { Button } from "./ui/button";
+import { toast } from "sonner";
 import {
   Code,
   Bell,
@@ -105,6 +106,12 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
     socket.on("notification_received", (newNoti: Notification) => {
       setNotifications(prev => [newNoti, ...prev]);
       setUnreadNotifications(prev => prev + 1);
+
+      // Trigger toast popup
+      toast.info(newNoti.title, {
+        description: newNoti.message,
+        duration: 5000,
+      });
     });
 
     return () => {

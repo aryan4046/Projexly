@@ -3,6 +3,7 @@ const PendingUser = require("../models/PendingUser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
+const { sendNotification } = require("../services/notificationService");
 
 // Generate JWT
 const generateToken = (id, role) => {
@@ -361,6 +362,14 @@ exports.updateProfile = async (req, res) => {
         portfolio: updatedUser.portfolio,
         notifications: updatedUser.notifications,
       },
+    });
+
+    // Trigger Profile Updated Notification
+    await sendNotification(req.app, {
+      recipient: updatedUser._id,
+      type: "profile_update",
+      title: "Profile Updated ✨",
+      message: "Your profile information has been successfully updated.",
     });
   } catch (error) {
     console.error(error);

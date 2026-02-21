@@ -14,7 +14,7 @@ const notificationSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["proposal_new", "proposal_accepted", "order_status", "message"],
+            enum: ["proposal_new", "proposal_accepted", "order_status", "message", "welcome", "profile_update", "project_new", "proposal_sent"],
             required: true,
         },
         title: {

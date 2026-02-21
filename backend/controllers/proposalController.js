@@ -28,6 +28,15 @@ exports.createProposal = async (req, res) => {
         message: `You received a new proposal for your project: ${project.title}`,
         relatedId: proposal._id,
       });
+
+      // Trigger Notification for the Freelancer (Sender)
+      await sendNotification(req.app, {
+        recipient: req.user._id,
+        type: "proposal_sent",
+        title: "Proposal Sent Successfully! ✉️",
+        message: `Your proposal for "${project.title}" has been sent to the client.`,
+        relatedId: proposal._id,
+      });
     }
 
     res.status(201).json(proposal);

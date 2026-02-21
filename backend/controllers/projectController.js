@@ -1,4 +1,5 @@
 const Project = require("../models/Project");
+const { sendNotification } = require("../services/notificationService");
 
 // CREATE PROJECT
 exports.createProject = async (req, res) => {
@@ -14,6 +15,15 @@ exports.createProject = async (req, res) => {
     });
 
     res.status(201).json(project);
+
+    // Trigger Project Posted Notification
+    await sendNotification(req.app, {
+      recipient: req.user._id,
+      type: "project_new",
+      title: "Project Posted Successfully! 📈",
+      message: `Your project "${title}" is now live and visible to freelancers.`,
+      relatedId: project._id,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
