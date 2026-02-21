@@ -55,12 +55,16 @@ passport.use(
                             user.otp = await bcrypt.hash(rawOtp, 10);
                             user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-                            sendEmail({
-                                to: user.email,
-                                subject: "Projexly - Verify your email",
-                                text: `Your OTP is ${rawOtp}.`,
-                                html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your Google account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
-                            }).catch(err => console.error("OAuth OTP Email Error:", err));
+                            try {
+                                await sendEmail({
+                                    to: user.email,
+                                    subject: "Projexly - Verify your email",
+                                    text: `Your OTP is ${rawOtp}.`,
+                                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your Google account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
+                                });
+                            } catch (err) {
+                                console.error("OAuth OTP Email Error (Google Existing):", err);
+                            }
                         }
 
                         await user.save();
@@ -83,12 +87,16 @@ passport.use(
                     otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
 
-                sendEmail({
-                    to: newUser.email,
-                    subject: "Projexly - Welcome! Verify your email",
-                    text: `Your OTP is ${rawOtp}.`,
-                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your Google account using this code: <strong>${rawOtp}</strong></p></div>`
-                }).catch(err => console.error("OAuth New User OTP Email Error:", err));
+                try {
+                    await sendEmail({
+                        to: newUser.email,
+                        subject: "Projexly - Welcome! Verify your email",
+                        text: `Your OTP is ${rawOtp}.`,
+                        html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your Google account using this code: <strong>${rawOtp}</strong></p></div>`
+                    });
+                } catch (err) {
+                    console.error("OAuth New User OTP Email Error (Google New):", err);
+                }
 
                 return done(null, newUser);
             } catch (err) {
@@ -134,12 +142,16 @@ passport.use(
                             user.otp = await bcrypt.hash(rawOtp, 10);
                             user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-                            sendEmail({
-                                to: user.email,
-                                subject: "Projexly - Verify your email",
-                                text: `Your OTP is ${rawOtp}.`,
-                                html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your GitHub account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
-                            }).catch(err => console.error("OAuth OTP Email Error:", err));
+                            try {
+                                await sendEmail({
+                                    to: user.email,
+                                    subject: "Projexly - Verify your email",
+                                    text: `Your OTP is ${rawOtp}.`,
+                                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your GitHub account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
+                                });
+                            } catch (err) {
+                                console.error("OAuth OTP Email Error (GitHub Existing):", err);
+                            }
                         }
 
                         await user.save();
@@ -162,12 +174,16 @@ passport.use(
                     otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
 
-                sendEmail({
-                    to: newUser.email,
-                    subject: "Projexly - Welcome! Verify your email",
-                    text: `Your OTP is ${rawOtp}.`,
-                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your GitHub account using this code: <strong>${rawOtp}</strong></p></div>`
-                }).catch(err => console.error("OAuth New User OTP Email Error:", err));
+                try {
+                    await sendEmail({
+                        to: newUser.email,
+                        subject: "Projexly - Welcome! Verify your email",
+                        text: `Your OTP is ${rawOtp}.`,
+                        html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your GitHub account using this code: <strong>${rawOtp}</strong></p></div>`
+                    });
+                } catch (err) {
+                    console.error("OAuth New User OTP Email Error (GitHub New):", err);
+                }
 
                 return done(null, newUser);
             } catch (err) {
