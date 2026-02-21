@@ -13,6 +13,13 @@ export function OAuthCallback() {
         if (token && userStr) {
             try {
                 const user = JSON.parse(decodeURIComponent(userStr));
+
+                if (!user.isVerified) {
+                    // Redirect to login with OTP required state
+                    navigate(`/login?email=${encodeURIComponent(user.email)}&requiresOTP=true`, { replace: true });
+                    return;
+                }
+
                 localStorage.setItem("token", token);
                 localStorage.setItem("user", JSON.stringify(user));
 

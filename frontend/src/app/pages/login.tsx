@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<"student" | "freelancer">("student");
@@ -28,6 +29,18 @@ export function Login() {
     }
     return () => clearTimeout(timer);
   }, [showOTP, countdown]);
+
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    const requiresOTPParam = searchParams.get("requiresOTP");
+
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+    if (requiresOTPParam === "true") {
+      setShowOTP(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

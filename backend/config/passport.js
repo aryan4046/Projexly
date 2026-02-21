@@ -2,6 +2,8 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const sendEmail = require("../utils/sendEmail");
 
 // Serialize user for the session
 passport.serializeUser((user, done) => {
@@ -45,22 +47,48 @@ passport.use(
                     if (user) {
                         // Link google ID to existing account
                         user.googleId = profile.id;
-                        user.isVerified = true; // Auto-verify if they connect google
+                        user.isVerified = user.isVerified || false; // Keep verified if already verified, else false or stay false
                         user.profilePicture = profilePicture; // Sync picture
+
+                        if (!user.isVerified) {
+                            const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                            user.otp = await bcrypt.hash(rawOtp, 10);
+                            user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+                            sendEmail({
+                                to: user.email,
+                                subject: "Projexly - Verify your email",
+                                text: `Your OTP is ${rawOtp}.`,
+                                html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your Google account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
+                            }).catch(err => console.error("OAuth OTP Email Error:", err));
+                        }
+
                         await user.save();
                         return done(null, user);
                     }
                 }
+
+                const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                const otpHash = await bcrypt.hash(rawOtp, 10);
 
                 // Create new user
                 const newUser = await User.create({
                     googleId: profile.id,
                     name: profile.displayName,
                     email: email || `${profile.id}@google.oauth`,
-                    isVerified: true, // Google accounts are implicitly verified
-                    role: "student", // default role, they can change later
+                    isVerified: false,
+                    role: "student",
                     profilePicture: profilePicture,
+                    otp: otpHash,
+                    otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
+
+                sendEmail({
+                    to: newUser.email,
+                    subject: "Projexly - Welcome! Verify your email",
+                    text: `Your OTP is ${rawOtp}.`,
+                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your Google account using this code: <strong>${rawOtp}</strong></p></div>`
+                }).catch(err => console.error("OAuth New User OTP Email Error:", err));
 
                 return done(null, newUser);
             } catch (err) {
@@ -98,22 +126,48 @@ passport.use(
                     if (user) {
                         // Link GitHub ID to existing account
                         user.githubId = profile.id;
-                        user.isVerified = true;
-                        user.profilePicture = profilePicture; // Sync picture
+                        user.isVerified = user.isVerified || false;
+                        user.profilePicture = profilePicture;
+
+                        if (!user.isVerified) {
+                            const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                            user.otp = await bcrypt.hash(rawOtp, 10);
+                            user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+                            sendEmail({
+                                to: user.email,
+                                subject: "Projexly - Verify your email",
+                                text: `Your OTP is ${rawOtp}.`,
+                                html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your GitHub account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
+                            }).catch(err => console.error("OAuth OTP Email Error:", err));
+                        }
+
                         await user.save();
                         return done(null, user);
                     }
                 }
+
+                const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                const otpHash = await bcrypt.hash(rawOtp, 10);
 
                 // Create new user
                 const newUser = await User.create({
                     githubId: profile.id,
                     name: profile.displayName || profile.username,
                     email: email || `${profile.username}@github.oauth`,
-                    isVerified: true,
+                    isVerified: false,
                     role: "student",
                     profilePicture: profilePicture,
+                    otp: otpHash,
+                    otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
+
+                sendEmail({
+                    to: newUser.email,
+                    subject: "Projexly - Welcome! Verify your email",
+                    text: `Your OTP is ${rawOtp}.`,
+                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your GitHub account using this code: <strong>${rawOtp}</strong></p></div>`
+                }).catch(err => console.error("OAuth New User OTP Email Error:", err));
 
                 return done(null, newUser);
             } catch (err) {
