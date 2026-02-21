@@ -1,8 +1,8 @@
 console.log("🔥 THIS SERVER FILE IS RUNNING");
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
 const connectDB = require("./config/db");
 const session = require("express-session");
 const passport = require("passport");
