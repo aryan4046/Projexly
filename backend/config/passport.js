@@ -55,6 +55,9 @@ passport.use(
                             user.otp = await bcrypt.hash(rawOtp, 10);
                             user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+                            // Fallback: Log OTP to console for development/testing
+                            console.log(`[AUTH] OAuth OTP (Google Existing) for ${user.email}: ${rawOtp}`);
+
                             try {
                                 await sendEmail({
                                     to: user.email,
@@ -86,6 +89,9 @@ passport.use(
                     otp: otpHash,
                     otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
+
+                // Fallback: Log OTP to console for development/testing
+                console.log(`[AUTH] OAuth OTP (Google New) for ${newUser.email}: ${rawOtp}`);
 
                 try {
                     await sendEmail({
@@ -142,6 +148,9 @@ passport.use(
                             user.otp = await bcrypt.hash(rawOtp, 10);
                             user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
+                            // Fallback: Log OTP to console for development/testing
+                            console.log(`[AUTH] OAuth OTP (GitHub Existing) for ${user.email}: ${rawOtp}`);
+
                             try {
                                 await sendEmail({
                                     to: user.email,
@@ -173,6 +182,9 @@ passport.use(
                     otp: otpHash,
                     otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
+
+                // Fallback: Log OTP to console for development/testing
+                console.log(`[AUTH] OAuth OTP (GitHub New) for ${newUser.email}: ${rawOtp}`);
 
                 try {
                     await sendEmail({
