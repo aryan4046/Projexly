@@ -176,10 +176,10 @@ export function Register() {
       </div>
 
       {/* Right Side: Authentication Form */}
-      <div className="flex-1 relative overflow-y-auto no-scrollbar">
-        <div className="min-h-full w-full flex flex-col items-center justify-center p-4 lg:p-12 relative">
+      <div className="flex-1 relative overflow-hidden">
+        <div className="h-full w-full flex flex-col items-center justify-center p-4 lg:p-8 relative">
           {/* Glassmorphism Card */}
-          <div className="w-full max-w-[500px] relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 lg:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all duration-500">
+          <div className="w-full max-w-[480px] relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all duration-500">
 
             {/* Mobile Logo */}
             <Link to="/" className="flex lg:hidden items-center gap-2 justify-center mb-8">
@@ -191,13 +191,13 @@ export function Register() {
               </span>
             </Link>
 
-            <div className="text-center mb-10">
-              <h1 className="text-4xl font-black text-white mb-3 tracking-tight">Create Account</h1>
-              <p className="text-slate-400 font-medium">Get started with the world's most advanced platform</p>
+            <div className="text-center mb-6">
+              <h1 className="text-3xl lg:text-4xl font-black text-white mb-2 tracking-tight">Create Account</h1>
+              <p className="text-slate-400 text-sm font-medium">Join our advanced professional platform</p>
             </div>
 
             {/* Role Selection - Upgraded */}
-            <div className="grid grid-cols-2 gap-4 mb-10">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <button
                 onClick={() => setUserType("student")}
                 className={`relative overflow-hidden rounded-2xl border-2 p-5 flex flex-col items-center gap-3 transition-all duration-300 ${userType === "student"
@@ -277,8 +277,8 @@ export function Register() {
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                <div className="grid gap-6">
+              <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className="grid gap-4">
                   <div className="space-y-3">
                     <Label htmlFor="name" className="text-slate-300 font-bold ml-1">FULL NAME</Label>
                     <Input
@@ -288,7 +288,7 @@ export function Register() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className={`bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all`}
+                      className={`bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all`}
                     />
                   </div>
 
@@ -301,7 +301,7 @@ export function Register() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className={`bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all`}
+                      className={`bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all`}
                     />
                   </div>
 
@@ -315,7 +315,7 @@ export function Register() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className={`bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all pr-12`}
+                        className={`bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all pr-12`}
                       />
                       <button
                         type="button"
@@ -350,12 +350,12 @@ export function Register() {
                 <Button
                   type="submit"
                   loading={isLoading}
-                  className={`w-full text-white font-black text-lg h-14 rounded-2xl transition-all hover:scale-[1.03] active:scale-[0.98] ${buttonGradient} shadow-2xl mt-4`}
+                  className={`w-full text-white font-black text-lg h-12 rounded-2xl transition-all hover:scale-[1.03] active:scale-[0.98] ${buttonGradient} shadow-2xl mt-2`}
                 >
                   CREATE ACCOUNT
                 </Button>
 
-                <div className="relative my-8">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/5"></div>
                   </div>
@@ -392,10 +392,10 @@ export function Register() {
               </form>
             )}
 
-            <div className="mt-10 text-center">
+            <div className="mt-8 text-center">
               <p className="text-slate-500 font-bold text-sm">
                 ALREADY HAVE AN ACCOUNT?{" "}
-                <Link to="/login" className={`text-white hover:underline underline-offset-4 transition-all`}>
+                <Link to="/login" className={`text-white hover:underline underline-offset-4 transition-all tracking-wide`}>
                   LOG IN
                 </Link>
               </p>
