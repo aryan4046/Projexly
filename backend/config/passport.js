@@ -26,7 +26,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID || "temp_google_id",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "temp_google_secret",
-            callbackURL: "/api/auth/google/callback",
+            callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/google/callback`,
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
@@ -38,12 +38,15 @@ passport.use(
 
                 // Check if a user with this email already exists
                 const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
+                const profilePicture = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : "";
+
                 if (email) {
                     user = await User.findOne({ email });
                     if (user) {
                         // Link google ID to existing account
                         user.googleId = profile.id;
                         user.isVerified = true; // Auto-verify if they connect google
+                        user.profilePicture = profilePicture; // Sync picture
                         await user.save();
                         return done(null, user);
                     }
@@ -56,6 +59,7 @@ passport.use(
                     email: email || `${profile.id}@google.oauth`,
                     isVerified: true, // Google accounts are implicitly verified
                     role: "student", // default role, they can change later
+                    profilePicture: profilePicture,
                 });
 
                 return done(null, newUser);
@@ -74,7 +78,7 @@ passport.use(
         {
             clientID: process.env.GITHUB_CLIENT_ID || "temp_github_id",
             clientSecret: process.env.GITHUB_CLIENT_SECRET || "temp_github_secret",
-            callbackURL: "/api/auth/github/callback",
+            callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/github/callback`,
             scope: ["user:email"],
         },
         async (accessToken, refreshToken, profile, done) => {
@@ -87,6 +91,7 @@ passport.use(
 
                 // Fetch emails associated with GitHub
                 const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
+                const profilePicture = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : (profile._json ? profile._json.avatar_url : "");
 
                 if (email) {
                     user = await User.findOne({ email });
@@ -94,6 +99,7 @@ passport.use(
                         // Link GitHub ID to existing account
                         user.githubId = profile.id;
                         user.isVerified = true;
+                        user.profilePicture = profilePicture; // Sync picture
                         await user.save();
                         return done(null, user);
                     }
@@ -106,6 +112,7 @@ passport.use(
                     email: email || `${profile.username}@github.oauth`,
                     isVerified: true,
                     role: "student",
+                    profilePicture: profilePicture,
                 });
 
                 return done(null, newUser);

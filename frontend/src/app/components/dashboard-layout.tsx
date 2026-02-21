@@ -300,7 +300,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 hover:bg-muted rounded-lg p-2 transition-colors">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}`} />
+                      <AvatarImage src={user?.profilePicture || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}`} />
                       <AvatarFallback className={`bg-gradient-to-br ${currentTheme.gradient} text-white`}>
                         {user?.name
                           ? user.name

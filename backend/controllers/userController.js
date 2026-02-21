@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const PendingUser = require("../models/PendingUser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
@@ -23,57 +24,53 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "Please fill all fields" });
     }
 
+    // 1. Check if user already exists in main collection
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // 2. Hash password and OTP
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate a 6-digit OTP
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(rawOtp, 10);
-    const otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "student",
-      otp: otpHash,
-      otpExpires,
-    });
+    // 3. Upsert to PendingUser (updates if already pending)
+    await PendingUser.findOneAndUpdate(
+      { email },
+      {
+        name,
+        email,
+        password: hashedPassword,
+        role: role || "student",
+        otp: otpHash,
+        createdAt: Date.now() // Reset the 10-min countdown
+      },
+      { upsert: true, new: true }
+    );
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "Projexly - Verify your email",
-        text: `Your OTP is ${rawOtp}. It is valid for 60 seconds.`,
-        html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-          <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
-          <p style="color: #334155; font-size: 16px;">Hello there,</p>
-          <p style="color: #334155; font-size: 16px;">We are thrilled to welcome you to <strong>Projexly</strong>! To complete your registration and secure your new account, please verify your email address using the One-Time Password (OTP) provided below:</p>
-          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-          </div>
-          <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 60 seconds.</p>
-          <p style="color: #64748b; font-size: 14px; text-align: center;">Please hurry and enter the code on the verification screen.</p>
-          <p style="color: #64748b; font-size: 14px; margin-top: 20px;">If you didn't attempt to create an account, you can safely ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-          <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Projexly. All rights reserved.</p>
+    // 4. Send Email ASYNCHRONOUSLY (No await)
+    // This makes the response "instant" for the user
+    sendEmail({
+      to: email,
+      subject: "Projexly - Verify your email",
+      text: `Your OTP is ${rawOtp}. It is valid for 10 minutes.`,
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+        <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
+        <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
         </div>
-        `,
-      });
-    } catch (err) {
-      console.error("Failed to send OTP email:", err);
-      // We still registered the user, but email failed. They can request a new OTP later.
-    }
+        <p style="color: #64748b; font-size: 14px; text-align: center;">Enter this code to complete your registration.</p>
+      </div>
+      `,
+    }).catch(err => console.error("Async Email Error:", err));
 
+    // 5. Respond instantly
     res.status(201).json({
       message: "Registration successful. Please verify your email.",
       requiresOTP: true,
-      email: user.email,
+      email: email,
     });
 
   } catch (error) {
@@ -172,28 +169,34 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Please provide email and OTP" });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
+    // Find in PendingUser first
+    const pendingUser = await PendingUser.findOne({ email });
+    if (!pendingUser) {
+      // If not in pending, check if they are already verified in User
+      const alreadyVerified = await User.findOne({ email });
+      if (alreadyVerified) {
+        return res.status(400).json({ message: "User is already verified" });
+      }
+      return res.status(400).json({ message: "OTP expired or invalid session. Please register again." });
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified" });
-    }
-
-    if (!user.otp || !user.otpExpires || user.otpExpires < new Date()) {
-      return res.status(400).json({ message: "OTP has expired. Please request a new one." });
-    }
-
-    const isMatch = await bcrypt.compare(otp, user.otp);
+    // Check OTP
+    const isMatch = await bcrypt.compare(otp, pendingUser.otp);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
+    // 1. Create the official User
+    const user = await User.create({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.password,
+      role: pendingUser.role,
+      isVerified: true
+    });
+
+    // 2. Delete from PendingUser
+    await PendingUser.deleteOne({ email });
 
     res.json({
       message: "Email verified successfully.",
@@ -223,52 +226,32 @@ exports.resendOTP = async (req, res) => {
       return res.status(400).json({ message: "Please provide an email" });
     }
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified" });
-    }
-
-    // Check if the previous OTP is still valid to prevent spamming
-    if (user.otpExpires && user.otpExpires > new Date()) {
-      const waitTimeObj = Math.ceil((user.otpExpires - new Date()) / 1000);
-      return res.status(429).json({ message: `Please wait ${waitTimeObj} seconds before requesting a new OTP.` });
+    // Look in PendingUser (unverified)
+    const pendingUser = await PendingUser.findOne({ email });
+    if (!pendingUser) {
+      return res.status(400).json({ message: "Session expired. Please register again." });
     }
 
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = await bcrypt.hash(rawOtp, 10);
-    user.otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
-    await user.save();
+    pendingUser.otp = await bcrypt.hash(rawOtp, 10);
+    pendingUser.createdAt = Date.now(); // Reset TTL
+    await pendingUser.save();
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "Projexly - New OTP Request",
-        text: `Your new OTP is ${rawOtp}. It expires in 60 seconds.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-            <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
-            <p style="color: #334155; font-size: 16px;">Hello there,</p>
-            <p style="color: #334155; font-size: 16px;">You requested a new One-Time Password (OTP) to verify your account. Here is your new code:</p>
-            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-            </div>
-            <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ For your security, this code will expire in exactly 60 seconds.</p>
-            <p style="color: #64748b; font-size: 14px; text-align: center;">Please return to the verification screen and enter this code quickly.</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Projexly. All rights reserved.</p>
+    sendEmail({
+      to: email,
+      subject: "Projexly - New OTP Request",
+      text: `Your new OTP is ${rawOtp}.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+          <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
+          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
           </div>
-        `,
-      });
-      res.json({ message: "A new OTP has been sent." });
-    } catch (err) {
-      console.error("Failed to resend OTP email:", err);
-      res.status(500).json({ message: "Failed to send email. Please try again later." });
-    }
+        </div>
+      `,
+    }).catch(err => console.error("Async Email Error:", err));
+
+    res.json({ message: "A new OTP has been sent." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

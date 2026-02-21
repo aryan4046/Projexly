@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "freelancer"],
       default: "student",
     },
+    profilePicture: { type: String, default: "" },
     // Profile Fields
     headline: { type: String, default: "" },
     location: { type: String, default: "" },

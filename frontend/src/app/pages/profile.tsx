@@ -253,10 +253,14 @@ export function Profile() {
                                     </Dialog>
                                 </div>
                             )}
-                            <div className={`w-24 h-24 mx-auto ${avatarColor} rounded-full flex items-center justify-center mb-4`}>
-                                <span className="text-3xl text-white font-semibold">
-                                    {user.name.split(" ").map((n: string) => n[0]).join("")}
-                                </span>
+                            <div className={`w-24 h-24 mx-auto ${avatarColor} rounded-full flex items-center justify-center mb-4 overflow-hidden border-4 border-background shadow-lg`}>
+                                {user.profilePicture ? (
+                                    <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-3xl text-white font-semibold">
+                                        {user.name.split(" ").map((n: string) => n[0]).join("")}
+                                    </span>
+                                )}
                             </div>
                             <h2 className="text-xl font-bold text-foreground">{user.name}</h2>
                             <p className="text-muted-foreground text-sm mb-2">{user.headline || "No headline added"}</p>
