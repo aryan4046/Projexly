@@ -65,16 +65,19 @@ exports.register = async (req, res) => {
         </div>
         `,
       });
+
+      // 5. Respond success
+      res.status(201).json({
+        message: "Registration successful. Please verify your email.",
+        requiresOTP: true,
+        email: email,
+      });
     } catch (err) {
       console.error("Registration Email Error:", err);
+      // Delete the pending user if email failed so they can try again
+      await PendingUser.deleteOne({ email });
+      return res.status(500).json({ message: "Failed to send verification email. Please try again." });
     }
-
-    // 5. Respond instantly
-    res.status(201).json({
-      message: "Registration successful. Please verify your email.",
-      requiresOTP: true,
-      email: email,
-    });
 
   } catch (error) {
     console.error(error);
@@ -133,15 +136,16 @@ exports.login = async (req, res) => {
             </div>
           `,
         });
+
+        return res.status(403).json({
+          message: "Email not verified. A new OTP has been sent.",
+          requiresOTP: true,
+          email: user.email
+        });
       } catch (err) {
         console.error("Login OTP Email Error:", err);
+        return res.status(500).json({ message: "Failed to send OTP. Please try again later." });
       }
-
-      return res.status(403).json({
-        message: "Email not verified. A new OTP has been sent.",
-        requiresOTP: true,
-        email: user.email
-      });
     }
 
     res.json({
@@ -254,11 +258,11 @@ exports.resendOTP = async (req, res) => {
           </div>
         `,
       });
+      res.json({ message: "A new OTP has been sent." });
     } catch (err) {
       console.error("Resend OTP Email Error:", err);
+      res.status(500).json({ message: "Failed to send OTP. Please try again." });
     }
-
-    res.json({ message: "A new OTP has been sent." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
