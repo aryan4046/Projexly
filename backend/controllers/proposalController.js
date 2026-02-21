@@ -1,5 +1,6 @@
 const Proposal = require("../models/Proposal");
 const Project = require("../models/Project");
+const { sendNotification } = require("../services/notificationService");
 
 // CREATE PROPOSAL
 exports.createProposal = async (req, res) => {
@@ -15,6 +16,20 @@ exports.createProposal = async (req, res) => {
     });
 
     console.log(`[API] Proposal created: ${proposal._id}`);
+
+    // Trigger Notification for the Project Owner (Student)
+    const project = await Project.findById(projectId);
+    if (project) {
+      await sendNotification(req.app, {
+        recipient: project.student,
+        sender: req.user._id,
+        type: "proposal_new",
+        title: "New Proposal Received",
+        message: `You received a new proposal for your project: ${project.title}`,
+        relatedId: proposal._id,
+      });
+    }
+
     res.status(201).json(proposal);
   } catch (error) {
     console.error("[API] Create Proposal Error:", error);
@@ -101,6 +116,16 @@ exports.acceptProposal = async (req, res) => {
     });
 
     console.log(`[API] Order created: ${order._id}`);
+
+    // Trigger Notification for the Freelancer (Seller)
+    await sendNotification(req.app, {
+      recipient: proposal.freelancer,
+      sender: req.user._id,
+      type: "proposal_accepted",
+      title: "Proposal Accepted!",
+      message: `Your proposal for "${proposal.project.title}" has been accepted. An order has been created.`,
+      relatedId: order._id,
+    });
 
     res.json({ message: "Proposal accepted and order created", order });
   } catch (error) {

@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const Gig = require("../models/Gig");
+const { sendNotification } = require("../services/notificationService");
 
 // ==============================
 // CREATE ORDER
@@ -26,6 +27,16 @@ exports.createOrder = async (req, res) => {
         });
 
         res.status(201).json(order);
+
+        // Trigger Notification for the Seller (Freelancer)
+        await sendNotification(req.app, {
+            recipient: gig.freelancer,
+            sender: req.user.id,
+            type: "order_status",
+            title: "New Order Received!",
+            message: `You have a new order for your gig: ${gig.title}`,
+            relatedId: order._id,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });
@@ -95,6 +106,16 @@ exports.deliverOrder = async (req, res) => {
         await order.save();
 
         res.json({ message: "Work delivered", order });
+
+        // Trigger Notification for the Buyer (Student)
+        await sendNotification(req.app, {
+            recipient: order.buyer,
+            sender: req.user.id,
+            type: "order_status",
+            title: "Work Delivered!",
+            message: `The freelancer has delivered work for your order.`,
+            relatedId: order._id,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });
@@ -125,6 +146,17 @@ exports.updateOrderStatus = async (req, res) => {
         await order.save();
 
         res.json(order);
+
+        // Trigger Notification for the other party
+        const otherParty = order.buyer.toString() === req.user.id ? order.seller : order.buyer;
+        await sendNotification(req.app, {
+            recipient: otherParty,
+            sender: req.user.id,
+            type: "order_status",
+            title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+            message: `The order status has been updated to: ${status}`,
+            relatedId: order._id,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });

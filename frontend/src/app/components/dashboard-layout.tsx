@@ -1,7 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { authAPI } from "../../api/auth";
-import { messageAPI, Message } from "../../api/messages"; // Import real API
+import { messageAPI } from "../../api/messages";
+import { notificationAPI, Notification } from "../../api/notifications";
+import { io, Socket } from "socket.io-client";
 import { Button } from "./ui/button";
 import {
   Code,
@@ -29,7 +31,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"; // Use AvatarImage
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
-import { Separator } from "./ui/separator";
 
 interface NavItem {
   label: string;
@@ -76,9 +77,40 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Real State for Messages
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Notification State
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    // 1. Initialize Socket
+    const newSocket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    // Join user-specific channel
+    socket.emit("join", user._id);
+
+    // Listen for new notifications
+    socket.on("notification_received", (newNoti: Notification) => {
+      setNotifications(prev => [newNoti, ...prev]);
+      setUnreadNotifications(prev => prev + 1);
+    });
+
+    return () => {
+      socket.off("notification_received");
+    };
+  }, [socket, user]);
 
   useEffect(() => {
     // Try to get user from local storage first
@@ -89,10 +121,14 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
 
     // Fetch latest user data
     fetchUser();
-    fetchMessages(); // Fetch real messages
+    fetchMessages();
+    fetchNotifications();
 
-    // Poll for messages every 30 seconds
-    const interval = setInterval(fetchMessages, 30000);
+    // Poll for updates every 60 seconds
+    const interval = setInterval(() => {
+      fetchMessages();
+      fetchNotifications();
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -114,11 +150,42 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
       setRecentMessages(conversations.slice(0, 5));
 
       // Count unread - (Mocking this part for now as API doesn't return unread count per convo yet)
-      setUnreadCount(0);
+      setUnreadMessages(0);
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
   }
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await notificationAPI.getAll();
+      setNotifications(data);
+      const unread = data.filter(n => !n.isRead).length;
+      setUnreadNotifications(unread);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await notificationAPI.markAsRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setUnreadNotifications(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadNotifications(0);
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
+    }
+  };
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -126,16 +193,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
     navigate("/login");
   };
 
-  // Mock notifications data (Keep mock for now, implement real later if needed)
-  const notifications = [
-    {
-      id: 1,
-      title: "Welcome to Projexly",
-      message: "Get started by posting a project or creating a gig!",
-      time: "Just now",
-      unread: true,
-    },
-  ];
+  // Mock removed
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-indigo-500/30 overflow-hidden relative">
@@ -178,38 +236,73 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
               {/* Notifications */}
               <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button variant="ghost" size="icon" className="relative transition-all hover:bg-muted">
                     <Bell className="w-5 h-5" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background animate-pulse"></span>
+                    )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0 border-0 shadow-lg" align="end">
-                  <div className="p-4">
-                    <h4 className="font-medium text-sm">Notifications</h4>
+                <PopoverContent className="w-80 p-0 shadow-xl border border-border/50 bg-background/95 backdrop-blur-md" align="end">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-primary" /> Notifications
+                    </h4>
+                    {unreadNotifications > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-[10px] text-primary hover:underline font-medium"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
                   </div>
-                  <Separator />
                   <ScrollArea className="h-80">
-                    <div className="p-4">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`flex items-start gap-3 p-3 rounded-lg mb-2 hover:bg-muted cursor-pointer transition-colors ${notification.unread ? "bg-muted/50" : ""
-                            }`}
-                        >
-                          <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${theme === 'emerald' ? 'bg-emerald-600' : 'bg-indigo-600'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {notification.time}
-                            </p>
-                          </div>
+                    <div className="p-2">
+                      {notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                          <Bell className="w-8 h-8 opacity-20 mb-2" />
+                          <p className="text-xs">No notifications yet</p>
                         </div>
-                      ))}
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            onClick={() => {
+                              handleMarkAsRead(notification._id);
+                              // Optional: navigate to relatedId
+                            }}
+                            className={`flex items-start gap-3 p-3 rounded-lg mb-1 hover:bg-muted/50 cursor-pointer transition-colors relative group ${!notification.isRead ? "bg-primary/5" : ""}`}
+                          >
+                            <div className="shrink-0 mt-1">
+                              {notification.sender && notification.sender.profilePicture ? (
+                                <Avatar className="w-8 h-8 border border-border/50">
+                                  <AvatarImage src={notification.sender.profilePicture} />
+                                  <AvatarFallback className="text-[10px]">{notification.sender.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                                  <Bell className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-semibold text-foreground ${!notification.isRead ? "pr-4" : ""}`}>
+                                {notification.title}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-snug">
+                                {notification.message}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-tighter font-medium">
+                                {new Date(notification.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            {!notification.isRead && (
+                              <div className="absolute top-4 right-3 w-2 h-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </ScrollArea>
                 </PopoverContent>
@@ -221,7 +314,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative transition-all hover:bg-muted">
                     <MessageSquare className="w-5 h-5" />
-                    {unreadCount > 0 && (
+                    {unreadMessages > 0 && (
                       <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background"></span>
                     )}
                   </Button>
