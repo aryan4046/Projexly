@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Code, GraduationCap, Briefcase } from "lucide-react";
+import { Code, GraduationCap, Briefcase, Eye, EyeOff } from "lucide-react";
 import { authAPI } from "../../api/auth";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ export function Login() {
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -300,15 +301,29 @@ export function Login() {
                         FORGOT?
                       </a>
                     </div>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className={`bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all`}
-                    />
+                    <div className="relative group">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className={`bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-slate-600 focus:ring-4 ${userType === "freelancer" ? "focus:ring-emerald-500/20 focus:border-emerald-500" : "focus:ring-indigo-500/20 focus:border-indigo-500"} transition-all pr-12`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors duration-200"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5 animate-in fade-in zoom-in duration-300" />
+                        ) : (
+                          <Eye className="w-5 h-5 animate-in fade-in zoom-in duration-300" />
+                        )}
+                      </button>
+                      <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 pointer-events-none border-2 ${userType === "freelancer" ? "border-emerald-500/50" : "border-indigo-500/50"}`} />
+                    </div>
                   </div>
                 </div>
 
