@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (options) => {
     // Define email options
     const mailOptions = {
-        from: `"Projexly 🚀" <${process.env.SMTP_USER}>`,
+        from: process.env.SMTP_USER,
         to: options.to,
         subject: options.subject,
         text: options.text,
@@ -22,7 +22,12 @@ const sendEmail = async (options) => {
     };
 
     // Send the email
-    return await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully!");
+    console.log("Accepted:", info.accepted);
+    console.log("Rejected:", info.rejected);
+    console.log("Response:", info.response);
+    return info;
 };
 
 module.exports = sendEmail;
