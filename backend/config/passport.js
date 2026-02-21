@@ -35,6 +35,10 @@ passport.use(
                 let user = await User.findOne({ googleId: profile.id });
 
                 if (user) {
+                    if (!user.isVerified) {
+                        user.isVerified = true;
+                        await user.save();
+                    }
                     return done(null, user);
                 }
 
@@ -88,6 +92,10 @@ passport.use(
                 let user = await User.findOne({ githubId: profile.id });
 
                 if (user) {
+                    if (!user.isVerified) {
+                        user.isVerified = true;
+                        await user.save();
+                    }
                     return done(null, user);
                 }
 
