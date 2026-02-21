@@ -47,62 +47,22 @@ passport.use(
                     if (user) {
                         // Link google ID to existing account
                         user.googleId = profile.id;
-                        user.isVerified = user.isVerified || false; // Keep verified if already verified, else false or stay false
-                        user.profilePicture = profilePicture; // Sync picture
-
-                        if (!user.isVerified) {
-                            const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                            user.otp = await bcrypt.hash(rawOtp, 10);
-                            user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-                            // Fallback: Log OTP to console for development/testing
-                            console.log(`[AUTH] OAuth OTP (Google Existing) for ${user.email}: ${rawOtp}`);
-
-                            try {
-                                await sendEmail({
-                                    to: user.email,
-                                    subject: "Projexly - Verify your email",
-                                    text: `Your OTP is ${rawOtp}.`,
-                                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your Google account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
-                                });
-                            } catch (err) {
-                                console.error("OAuth OTP Email Error (Google Existing):", err);
-                            }
-                        }
-
+                        user.isVerified = true; // Trust Google's verification
+                        user.profilePicture = profilePicture;
                         await user.save();
                         return done(null, user);
                     }
                 }
 
-                const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                const otpHash = await bcrypt.hash(rawOtp, 10);
-
-                // Create new user
+                // Create new user (instantly verified)
                 const newUser = await User.create({
                     googleId: profile.id,
                     name: profile.displayName,
                     email: email || `${profile.id}@google.oauth`,
-                    isVerified: false,
+                    isVerified: true,
                     role: "student",
                     profilePicture: profilePicture,
-                    otp: otpHash,
-                    otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
-
-                // Fallback: Log OTP to console for development/testing
-                console.log(`[AUTH] OAuth OTP (Google New) for ${newUser.email}: ${rawOtp}`);
-
-                try {
-                    await sendEmail({
-                        to: newUser.email,
-                        subject: "Projexly - Welcome! Verify your email",
-                        text: `Your OTP is ${rawOtp}.`,
-                        html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your Google account using this code: <strong>${rawOtp}</strong></p></div>`
-                    });
-                } catch (err) {
-                    console.error("OAuth New User OTP Email Error (Google New):", err);
-                }
 
                 return done(null, newUser);
             } catch (err) {
@@ -140,62 +100,22 @@ passport.use(
                     if (user) {
                         // Link GitHub ID to existing account
                         user.githubId = profile.id;
-                        user.isVerified = user.isVerified || false;
+                        user.isVerified = true; // Trust GitHub's verification
                         user.profilePicture = profilePicture;
-
-                        if (!user.isVerified) {
-                            const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                            user.otp = await bcrypt.hash(rawOtp, 10);
-                            user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-                            // Fallback: Log OTP to console for development/testing
-                            console.log(`[AUTH] OAuth OTP (GitHub Existing) for ${user.email}: ${rawOtp}`);
-
-                            try {
-                                await sendEmail({
-                                    to: user.email,
-                                    subject: "Projexly - Verify your email",
-                                    text: `Your OTP is ${rawOtp}.`,
-                                    html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Verify your GitHub account on Projexly</h2><p>Your verification code is: <strong>${rawOtp}</strong></p></div>`
-                                });
-                            } catch (err) {
-                                console.error("OAuth OTP Email Error (GitHub Existing):", err);
-                            }
-                        }
-
                         await user.save();
                         return done(null, user);
                     }
                 }
 
-                const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                const otpHash = await bcrypt.hash(rawOtp, 10);
-
-                // Create new user
+                // Create new user (instantly verified)
                 const newUser = await User.create({
                     githubId: profile.id,
                     name: profile.displayName || profile.username,
                     email: email || `${profile.username}@github.oauth`,
-                    isVerified: false,
+                    isVerified: true,
                     role: "student",
                     profilePicture: profilePicture,
-                    otp: otpHash,
-                    otpExpires: new Date(Date.now() + 10 * 60 * 1000)
                 });
-
-                // Fallback: Log OTP to console for development/testing
-                console.log(`[AUTH] OAuth OTP (GitHub New) for ${newUser.email}: ${rawOtp}`);
-
-                try {
-                    await sendEmail({
-                        to: newUser.email,
-                        subject: "Projexly - Welcome! Verify your email",
-                        text: `Your OTP is ${rawOtp}.`,
-                        html: `<div style="font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;"><h2>Welcome to Projexly!</h2><p>Please verify your GitHub account using this code: <strong>${rawOtp}</strong></p></div>`
-                    });
-                } catch (err) {
-                    console.error("OAuth New User OTP Email Error (GitHub New):", err);
-                }
 
                 return done(null, newUser);
             } catch (err) {
