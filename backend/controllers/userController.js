@@ -31,7 +31,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // 2. Prepare OTP (Switch to plain-text for instant response)
+    // 2. Prepare OTP & Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Fallback: Log OTP to console for development/testing
