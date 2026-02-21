@@ -17,13 +17,17 @@ const sendNotification = async (app, data) => {
         // 3. Emit via Socket.io if user is connected
         const io = app.get("io");
         const userSockets = app.get("userSockets");
-        const socketId = userSockets.get(data.recipient.toString());
+        const recipientId = data.recipient.toString();
+        const socketId = userSockets.get(recipientId);
+
+        console.log(`[Notification] Looking for recipient ${recipientId}`);
+        console.log(`[Notification] Available in map:`, Array.from(userSockets.keys()));
 
         if (socketId) {
             io.to(socketId).emit("notification_received", populatedNotification);
-            console.log(`[Notification] Emitted to user ${data.recipient}`);
+            console.log(`[Notification] Emitted to user ${recipientId}`);
         } else {
-            console.log(`[Notification] User ${data.recipient} is offline. Saved to DB.`);
+            console.log(`[Notification] User ${recipientId} is offline. Saved to DB.`);
         }
 
         return populatedNotification;

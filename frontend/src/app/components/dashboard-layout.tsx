@@ -88,7 +88,11 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
 
   useEffect(() => {
     // 1. Initialize Socket
-    const newSocket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+    const newSocket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000", {
+      transports: ["websocket"],
+      reconnectionAttempts: 5,
+    });
+    console.log("[Socket] Initializing connection...");
     setSocket(newSocket);
 
     return () => {
@@ -100,7 +104,9 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
     if (!socket || !user) return;
 
     // Join user-specific channel
-    socket.emit("join", user._id);
+    const joinId = user._id || user.id;
+    console.log(`[Socket] Attempting to join with ID: ${joinId}`);
+    socket.emit("join", joinId);
 
     // Listen for new notifications
     socket.on("notification_received", (newNoti: Notification) => {

@@ -9,6 +9,7 @@ const {
   verifyOTP,
   resendOTP,
 } = require("../controllers/userController");
+const { sendNotification } = require("../services/notificationService");
 
 // Register
 router.post("/register", registerUser);
@@ -46,6 +47,14 @@ router.get(
     // Successful authentication
     const token = generateOAuthToken(req.user);
     res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: true }))}`);
+
+    // Trigger Welcome Back Notification
+    sendNotification(req.app, {
+      recipient: req.user._id,
+      type: "welcome",
+      title: "Welcome Back! 👋",
+      message: `Great to see you again, ${req.user.name}! You've logged in via Google.`,
+    });
   }
 );
 
@@ -64,6 +73,14 @@ router.get(
     // Successful authentication
     const token = generateOAuthToken(req.user);
     res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: true }))}`);
+
+    // Trigger Welcome Back Notification
+    sendNotification(req.app, {
+      recipient: req.user._id,
+      type: "welcome",
+      title: "Welcome Back! 👋",
+      message: `Great to see you again, ${req.user.name}! You've logged in via GitHub.`,
+    });
   }
 );
 
