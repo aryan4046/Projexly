@@ -36,6 +36,9 @@ exports.register = async (req, res) => {
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(rawOtp, 10);
 
+    // Fallback: Log OTP to console for development/testing
+    console.log(`[AUTH] OTP for ${email}: ${rawOtp}`);
+
     // 3. Upsert to PendingUser (updates if already pending)
     await PendingUser.findOneAndUpdate(
       { email },
@@ -116,6 +119,9 @@ exports.login = async (req, res) => {
       user.otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
       await user.save();
 
+      // Fallback: Log OTP to console for development/testing
+      console.log(`[AUTH] Login OTP for ${user.email}: ${rawOtp}`);
+
       try {
         await sendEmail({
           to: user.email,
@@ -158,6 +164,14 @@ exports.login = async (req, res) => {
         role: user.role,
       },
       token: generateToken(user._id, user.role),
+    });
+
+    // Trigger Welcome Back Notification
+    await sendNotification(req.app, {
+      recipient: user._id,
+      type: "welcome",
+      title: "Welcome Back! 👋",
+      message: `Glad to see you again, ${user.name}! Ready to get some work done?`,
     });
 
   } catch (error) {
@@ -217,6 +231,14 @@ exports.verifyOTP = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
 
+    // Trigger New User Welcome Notification
+    await sendNotification(req.app, {
+      recipient: user._id,
+      type: "welcome",
+      title: "Welcome to Projexly! 🚀",
+      message: `We're excited to have you here, ${user.name}. Let's start building something great together!`,
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -244,6 +266,9 @@ exports.resendOTP = async (req, res) => {
     pendingUser.otp = await bcrypt.hash(rawOtp, 10);
     pendingUser.createdAt = Date.now(); // Reset TTL
     await pendingUser.save();
+
+    // Fallback: Log OTP to console for development/testing
+    console.log(`[AUTH] Resend OTP for ${email}: ${rawOtp}`);
 
     try {
       await sendEmail({

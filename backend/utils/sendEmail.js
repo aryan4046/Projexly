@@ -14,20 +14,32 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (options) => {
     // Define email options
     const mailOptions = {
-        from: process.env.SMTP_USER,
+        from: `"Projexly" <${process.env.SMTP_USER}>`,
         to: options.to,
         subject: options.subject,
         text: options.text,
         html: options.html,
     };
 
-    // Send the email
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully!");
-    console.log("Accepted:", info.accepted);
-    console.log("Rejected:", info.rejected);
-    console.log("Response:", info.response);
-    return info;
+    let lastError;
+    // Retry logic (3 attempts)
+    for (let i = 0; i < 3; i++) {
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`Email sent successfully on attempt ${i + 1}!`);
+            console.log("Accepted:", info.accepted);
+            console.log("Response:", info.response);
+            return info;
+        } catch (error) {
+            lastError = error;
+            console.error(`Email attempt ${i + 1} failed:`, error.message);
+            // Wait 1 second before retrying
+            if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+
+    console.error("All email attempts failed.");
+    throw lastError;
 };
 
 module.exports = sendEmail;
