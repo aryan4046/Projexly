@@ -159,6 +159,7 @@ exports.login = async (req, res) => {
       message: "Login successful",
       user: {
         id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -224,6 +225,7 @@ exports.verifyOTP = async (req, res) => {
       message: "Email verified successfully.",
       user: {
         id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
