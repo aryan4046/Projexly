@@ -6,9 +6,6 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import {
-    LayoutDashboard,
-    FolderKanban,
-    FileText,
     ArrowLeft,
     DollarSign,
     Calendar,
@@ -188,7 +185,8 @@ export function CreateProject() {
                                         type="date"
                                         value={formData.deadline}
                                         onChange={handleChange}
-                                        className="h-11 bg-background/50"
+                                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                                        className="h-11 bg-background/50 cursor-pointer"
                                     />
                                 </div>
                             </div>

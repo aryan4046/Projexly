@@ -16,15 +16,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, animate } from "motion/react";
 import {
   LayoutDashboard,
-  FolderKanban,
-  FileText,
   Plus,
-  TrendingUp,
-
-  DollarSign,
   Clock,
-  Settings,
-  ShoppingBag,
+  FileText,
+  DollarSign,
   Sparkles,
   ArrowRight,
   Briefcase,
@@ -229,7 +224,7 @@ export function StudentDashboard() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="deadline">Deadline</Label>
-                          <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required />
+                          <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="cursor-pointer" required />
                         </div>
                       </div>
                       <div className="space-y-2">
