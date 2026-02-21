@@ -66,7 +66,10 @@ exports.register = async (req, res) => {
           <p style="color: #64748b; font-size: 14px; text-align: center;">Enter this code to complete your registration.</p>
         </div>
         `,
-    }).catch(err => console.error("Background Registration Email Error:", err));
+    }).catch(err => {
+      console.error(`[AUTH] CRITICAL: Background Registration Email failed for ${email}`);
+      console.error(`[AUTH] Error Details: ${err.message}`);
+    });
 
     // 5. Respond success instantly
     return res.status(201).json({
@@ -134,7 +137,10 @@ exports.login = async (req, res) => {
             <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Projexly. All rights reserved.</p>
           </div>
         `,
-      }).catch(err => console.error("Background Login OTP Email Error:", err));
+      }).catch(err => {
+        console.error(`[AUTH] CRITICAL: Background Login OTP Email failed for ${user.email}`);
+        console.error(`[AUTH] Error Details: ${err.message}`);
+      });
 
       return res.status(403).json({
         message: "Email not verified. A new OTP has been sent.",
@@ -161,7 +167,10 @@ exports.login = async (req, res) => {
       type: "welcome",
       title: "Welcome Back! 👋",
       message: `Glad to see you again, ${user.name}! Ready to get some work done?`,
-    }).catch(err => console.error("Background Welcome Notification Error:", err));
+    }).catch(err => {
+      console.error(`[NOTIFICATION] Background Welcome Notification failed for ${user._id}`);
+      console.error(`[NOTIFICATION] Error Details: ${err.message}`);
+    });
 
   } catch (error) {
     console.error(error);
@@ -226,7 +235,10 @@ exports.verifyOTP = async (req, res) => {
       type: "welcome",
       title: "Welcome to Projexly! 🚀",
       message: `We're excited to have you here, ${user.name}. Let's start building something great together!`,
-    }).catch(err => console.error("Background New User Notification Error:", err));
+    }).catch(err => {
+      console.error(`[NOTIFICATION] Background New User Notification failed for ${user._id}`);
+      console.error(`[NOTIFICATION] Error Details: ${err.message}`);
+    });
 
   } catch (error) {
     console.error(error);
@@ -272,7 +284,10 @@ exports.resendOTP = async (req, res) => {
           </div>
         </div>
       `,
-    }).catch(err => console.error("Background Resend OTP Email Error:", err));
+    }).catch(err => {
+      console.error(`[AUTH] CRITICAL: Background Resend OTP Email failed for ${email}`);
+      console.error(`[AUTH] Error Details: ${err.message}`);
+    });
 
     return res.json({ message: "A new OTP has been sent." });
   } catch (error) {
