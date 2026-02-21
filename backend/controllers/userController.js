@@ -31,10 +31,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // 2. Hash password and OTP
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 2. Prepare OTP (Switch to plain-text for instant response)
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await bcrypt.hash(rawOtp, 10);
 
     // Fallback: Log OTP to console for development/testing
     console.log(`[AUTH] OTP for ${email}: ${rawOtp}`);
@@ -47,7 +45,7 @@ exports.register = async (req, res) => {
         email,
         password: hashedPassword,
         role: role || "student",
-        otp: otpHash,
+        otp: rawOtp, // Store plain OTP for speed
         createdAt: Date.now() // Reset the 10-min countdown
       },
       { upsert: true, new: true }
@@ -106,9 +104,9 @@ exports.login = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      // Generate a new OTP if trying to log in but unverified
+      // Generate a new OTP (Plain-text for speed)
       const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.otp = await bcrypt.hash(rawOtp, 10);
+      user.otp = rawOtp;
       user.otpExpires = new Date(Date.now() + 60 * 1000); // 60 seconds
       await user.save();
 
@@ -156,13 +154,13 @@ exports.login = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
 
-    // Trigger Welcome Back Notification
-    await sendNotification(req.app, {
+    // Trigger Welcome Back Notification (De-coupled: Fire and forget)
+    sendNotification(req.app, {
       recipient: user._id,
       type: "welcome",
       title: "Welcome Back! 👋",
       message: `Glad to see you again, ${user.name}! Ready to get some work done?`,
-    });
+    }).catch(err => console.error("Background Welcome Notification Error:", err));
 
   } catch (error) {
     console.error(error);
@@ -192,9 +190,8 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "OTP expired or invalid session. Please register again." });
     }
 
-    // Check OTP
-    const isMatch = await bcrypt.compare(otp, pendingUser.otp);
-    if (!isMatch) {
+    // Check OTP (Instant plain-text comparison)
+    if (otp !== pendingUser.otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
@@ -222,13 +219,13 @@ exports.verifyOTP = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
 
-    // Trigger New User Welcome Notification
-    await sendNotification(req.app, {
+    // Trigger New User Welcome Notification (De-coupled)
+    sendNotification(req.app, {
       recipient: user._id,
       type: "welcome",
       title: "Welcome to Projexly! 🚀",
       message: `We're excited to have you here, ${user.name}. Let's start building something great together!`,
-    });
+    }).catch(err => console.error("Background New User Notification Error:", err));
 
   } catch (error) {
     console.error(error);
@@ -254,7 +251,7 @@ exports.resendOTP = async (req, res) => {
     }
 
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    pendingUser.otp = await bcrypt.hash(rawOtp, 10);
+    pendingUser.otp = rawOtp; // Plain text
     pendingUser.createdAt = Date.now(); // Reset TTL
     await pendingUser.save();
 

@@ -169,18 +169,17 @@ export function Register() {
           {/* Glassmorphism Card */}
           <div className="w-full max-w-[480px] relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all duration-500 overflow-hidden group">
 
-            {/* Refined Unique Fading Scroll Effect Container */}
-            <div className="relative h-[650px] overflow-y-auto scroll-smooth p-6 lg:p-10 transition-all duration-300
-              [mask-image:linear-gradient(to_bottom,transparent,black_40px,black_calc(100%-40px),transparent)]
+            {/* Refined Unique Scroll Container (No Box) */}
+            <div className="relative max-h-[70vh] overflow-y-auto scroll-smooth p-6 lg:p-10 transition-all duration-300
               [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]
-              [&::-webkit-scrollbar]:w-1.5
+              [&::-webkit-scrollbar]:w-1
               [&::-webkit-scrollbar-track]:bg-transparent
               [&::-webkit-scrollbar-thumb]:bg-gradient-to-b
-              [&::-webkit-scrollbar-thumb]:from-white/10
-              [&::-webkit-scrollbar-thumb]:to-white/5
+              [&::-webkit-scrollbar-thumb]:from-emerald-500/50
+              [&::-webkit-scrollbar-thumb]:to-teal-500/50
               [&::-webkit-scrollbar-thumb]:rounded-full
-              hover:[&::-webkit-scrollbar-thumb]:from-white/20
-              hover:[&::-webkit-scrollbar-thumb]:to-white/10">
+              hover:[&::-webkit-scrollbar-thumb]:from-emerald-400
+              hover:[&::-webkit-scrollbar-thumb]:to-teal-400">
 
               {/* Mobile Logo */}
               <Link to="/" className="flex lg:hidden items-center gap-2 justify-center mb-8">
