@@ -45,7 +45,7 @@ router.get(
   (req, res) => {
     // Successful authentication
     const token = generateOAuthToken(req.user);
-    res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: req.user.isVerified }))}`);
+    res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: true }))}`);
   }
 );
 
@@ -63,7 +63,7 @@ router.get(
   (req, res) => {
     // Successful authentication
     const token = generateOAuthToken(req.user);
-    res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: req.user.isVerified }))}`);
+    res.redirect(`${FRONTEND_URL}/auth/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, isVerified: true }))}`);
   }
 );
 
