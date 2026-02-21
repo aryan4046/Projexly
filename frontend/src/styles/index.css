@@ -114,3 +114,15 @@
 @utility glass-card {
   @apply bg-white/60 backdrop-blur-md border border-slate-200/60 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300;
 }
+
+/* Custom Date Picker Styles */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none !important;
+  -webkit-appearance: none;
+}

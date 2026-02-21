@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Search
 } from "lucide-react";
+import { CustomDatePicker } from "../../components/ui/custom-date-picker";
 import { toast } from "sonner";
 
 import { studentNavItems as navItems } from "../../../config/navigation";
@@ -222,10 +223,13 @@ export function StudentDashboard() {
                           <Label htmlFor="budget">Budget ($)</Label>
                           <Input id="budget" type="number" placeholder="5000" value={budget} onChange={(e) => setBudget(e.target.value)} required />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="deadline">Deadline</Label>
-                          <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="cursor-pointer" required />
-                        </div>
+                        <CustomDatePicker
+                          label="Deadline"
+                          id="deadline"
+                          value={deadline}
+                          onChange={(e) => setDeadline(e.target.value)}
+                          required
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="skills">Skills (comma-separated)</Label>

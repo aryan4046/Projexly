@@ -8,7 +8,6 @@ import { Label } from "../../components/ui/label";
 import {
     ArrowLeft,
     DollarSign,
-    Calendar,
     Layers,
     Sparkles
 } from "lucide-react";
@@ -16,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { projectAPI } from "../../../api/projects";
+import { CustomDatePicker } from "../../components/ui/custom-date-picker";
 
 import { studentNavItems as navItems } from "../../../config/navigation";
 
@@ -175,20 +175,14 @@ export function CreateProject() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="deadline" className="text-base font-semibold flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-orange-500" /> Deadline
-                                    </Label>
-                                    <Input
-                                        id="deadline"
-                                        name="deadline"
-                                        type="date"
-                                        value={formData.deadline}
-                                        onChange={handleChange}
-                                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                                        className="h-11 bg-background/50 cursor-pointer"
-                                    />
-                                </div>
+                                <CustomDatePicker
+                                    label="Deadline"
+                                    id="deadline"
+                                    name="deadline"
+                                    value={formData.deadline}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
 
                             <div className="space-y-2">
