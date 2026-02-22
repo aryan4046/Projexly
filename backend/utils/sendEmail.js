@@ -19,18 +19,20 @@ const sendEmail = async (options) => {
         if (!transporter) {
             transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
-                port: 465,
-                secure: true, // true for 465, false for other ports
+                port: 587,
+                secure: false, // Use STARTTLS
                 auth: {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS,
                 },
                 tls: {
-                    rejectUnauthorized: false // Helps in some restricted environments
+                    ciphers: 'SSLv3',
+                    rejectUnauthorized: false
                 },
-                connectionTimeout: 10000, // 10s
-                greetingTimeout: 10000,
+                connectionTimeout: 15000,
+                greetingTimeout: 15000,
             });
+
 
             // Verify connection configuration
             try {
@@ -52,7 +54,14 @@ const sendEmail = async (options) => {
             subject: options.subject,
             text: options.text,
             html: options.html,
+            priority: 'high',
+            headers: {
+                'X-Priority': '1 (Highest)',
+                'X-MSMail-Priority': 'High',
+                'Importance': 'High'
+            }
         };
+
 
         // Send email
         const info = await transporter.sendMail(mailOptions);
