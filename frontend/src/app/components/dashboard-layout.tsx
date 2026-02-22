@@ -200,6 +200,36 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
     }
   };
 
+  const handleRoleSwitch = async () => {
+    try {
+      const data = await authAPI.switchRole();
+      
+      // Update local storage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        userData.role = data.newRole;
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+      }
+      
+      localStorage.setItem("token", data.token);
+      
+      toast.success(`Role switched to ${data.newRole} successfully!`, {
+        description: "Your session has been updated.",
+      });
+
+      // Navigate to the appropriate dashboard
+      navigate(data.newRole === "student" ? "/student/dashboard" : "/freelancer/dashboard", { replace: true });
+      
+      // Force a page reload to ensure all components and API calls pick up the new role/token
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to switch role", error);
+      toast.error("Failed to switch role. Please try again.");
+    }
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -431,7 +461,7 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                     <Badge variant="outline" className="mt-2 capitalize">{userType || user?.role || "student"}</Badge>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(userType === "student" ? "/freelancer/dashboard" : "/student/dashboard")} className="cursor-pointer font-medium text-foreground">
+                  <DropdownMenuItem onClick={handleRoleSwitch} className="cursor-pointer font-medium text-foreground">
                     <div className={`w-2 h-2 rounded-full mr-2 bg-gradient-to-r ${userType === "student" ? themeStyles.emerald.gradient : themeStyles.indigo.gradient}`} />
                     Switch to {userType === "student" ? "Freelancer" : "Student"}
                   </DropdownMenuItem>
