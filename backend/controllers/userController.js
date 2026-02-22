@@ -3,6 +3,7 @@ const PendingUser = require("../models/PendingUser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
+const { validateEmail } = require("../utils/emailValidator");
 const { sendNotification } = require("../services/notificationService");
 
 // Generate JWT
@@ -23,6 +24,12 @@ exports.register = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Please fill all fields" });
+    }
+
+    // 0. Email Check (Syntax, Disposable, Existence)
+    const emailResult = await validateEmail(email);
+    if (!emailResult.valid) {
+      return res.status(400).json({ message: emailResult.message });
     }
 
     // 1. Check if user already exists in main collection
