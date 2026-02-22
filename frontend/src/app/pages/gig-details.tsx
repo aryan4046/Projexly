@@ -77,14 +77,25 @@ export function GigDetails() {
     return (
         <DashboardLayout navItems={navItems} userType="student" theme="indigo">
             <div className="container mx-auto py-8">
-                {/* Breadcrumbs */}
-                <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-                    <Link to="/student/dashboard" className="hover:text-indigo-600 transition-colors">Home</Link>
-                    <ChevronRight className="w-4 h-4" />
-                    <Link to="/gigs" className="hover:text-indigo-600 transition-colors">Marketplace</Link>
-                    <ChevronRight className="w-4 h-4" />
-                    <span className="text-foreground font-medium truncate max-w-[200px]">{gig.title}</span>
-                </nav>
+                {/* Breadcrumbs & Back Button */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Link to="/student/dashboard" className="hover:text-indigo-600 transition-colors font-medium">Home</Link>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
+                        <Link to="/gigs" className="hover:text-indigo-600 transition-colors font-medium">Marketplace</Link>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
+                        <span className="text-foreground font-bold truncate max-w-[200px]">{gig.title}</span>
+                    </nav>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-full bg-white/50 backdrop-blur-md border-white/40 shadow-sm hover:bg-white/80 transition-all font-bold text-indigo-600 group w-fit"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        Go Back
+                    </Button>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                     {/* Left Column: Content */}
@@ -122,19 +133,21 @@ export function GigDetails() {
                             </div>
                         </section>
 
-                        {/* Image Gallery */}
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="relative group rounded-[2.5rem] overflow-hidden bg-card/40 backdrop-blur-xl border border-white/20 shadow-2xl"
-                        >
-                            <img
-                                src={gig.images[0] || "https://placehold.co/1200x800?text=Premium+Service"}
-                                alt={gig.title}
-                                className="w-full aspect-video object-cover group-hover:scale-[1.02] transition-transform duration-700 ease-out"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                        </motion.div>
+                        {/* Image Gallery - Smaller Size */}
+                        <div className="flex justify-center">
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="relative group rounded-[2rem] overflow-hidden bg-card/40 backdrop-blur-xl border border-white/20 shadow-xl max-w-2xl w-full"
+                            >
+                                <img
+                                    src={gig.images[0] || "https://placehold.co/1200x800?text=Premium+Service"}
+                                    alt={gig.title}
+                                    className="w-full aspect-[21/9] object-cover group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                            </motion.div>
+                        </div>
 
                         {/* Description Section */}
                         <div className="space-y-6">
