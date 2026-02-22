@@ -18,7 +18,6 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, animate } from "motion/react";
 import {
-  LayoutDashboard,
   Search,
   FileText,
   DollarSign,
@@ -40,6 +39,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { format, subMonths, eachMonthOfInterval, isSameMonth, parseISO } from "date-fns";
 
 import { freelancerNavItems as navItems } from "../../../config/navigation";
+import { TimeAgo } from "../../components/ui/time-ago";
 
 export function FreelancerDashboard() {
   const navigate = useNavigate();
@@ -377,7 +377,7 @@ export function FreelancerDashboard() {
                           <h3 className="font-bold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">{order.gig?.title || order.project?.title || 'Custom Order'}</h3>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> Client: {order.buyer.name}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Due: {new Date(order.createdAt).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Due: <TimeAgo date={order.createdAt} /></span>
                           </div>
                         </div>
                         <div className="text-right pl-4 border-l">
@@ -561,7 +561,7 @@ export function FreelancerDashboard() {
                     <div>
                       <p className="text-sm font-medium">{item.title}</p>
                       <p className="text-xs text-muted-foreground">{item.desc}</p>
-                      <span className="text-[10px] text-muted-foreground mt-1 block">{item.date.toLocaleDateString()}</span>
+                      <TimeAgo date={item.date} className="text-[10px] text-muted-foreground mt-1 block" />
                     </div>
                   </div>
                 ))}

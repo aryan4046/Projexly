@@ -4,6 +4,7 @@ import { Badge } from "./ui/badge";
 import { Star, Clock, Heart, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
+import { TimeAgo } from "./ui/time-ago";
 
 interface GigCardProps {
     gig: Gig;
@@ -74,7 +75,7 @@ export function GigCard({ gig }: GigCardProps) {
                         <div className="flex items-center justify-between pt-2 border-t border-white/5">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5 text-primary/70" />
-                                <span>{gig.deliveryTime} Day Delivery</span>
+                                <TimeAgo date={Date.now() + gig.deliveryTime * 86400000} addSuffix={false} /> Delivery
                             </div>
                             <div className="group-hover:translate-x-1 transition-transform">
                                 <ArrowUpRight className="h-4 w-4 text-primary" />

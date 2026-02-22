@@ -32,6 +32,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"; // Use AvatarImage
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
+import { TimeAgo } from "./ui/time-ago";
 
 interface NavItem {
   label: string;
@@ -336,9 +337,10 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                               <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-snug">
                                 {notification.message}
                               </p>
-                              <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-tighter font-medium">
-                                {new Date(notification.createdAt).toLocaleDateString()}
-                              </p>
+                              <TimeAgo 
+                                date={notification.createdAt} 
+                                className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-tighter font-medium"
+                              />
                             </div>
                             {!notification.isRead && (
                               <div className="absolute top-4 right-3 w-2 h-2 rounded-full bg-primary" />
@@ -402,9 +404,10 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                                 <p className="text-sm font-semibold truncate text-foreground">
                                   {msgUser.name}
                                 </p>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {index === 0 ? '1m ago' : index === 1 ? '1h ago' : '1d ago'}
-                                </span>
+                                <TimeAgo 
+                                  date={Date.now() - (index * 3600000)} // Mocking relative time based on index for demo
+                                  className="text-[10px] text-muted-foreground"
+                                />
                               </div>
                               <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                                 {index === 0 ? "Hey, are you available for a quick call regarding the project?" : "The design files have been uploaded. Let me know what you think."}

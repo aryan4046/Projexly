@@ -9,7 +9,6 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../../api/auth";
 import {
@@ -32,6 +31,7 @@ import {
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { TimeAgo } from "../components/ui/time-ago";
 
 const getThemeStyles = (role: string) => {
     // Return the primary Indigo/Purple theme universally for the Orders page
@@ -208,7 +208,7 @@ export function Orders() {
                                     </div>
                                     <div className="flex items-center gap-1.5 hidden sm:flex">
                                         <Clock className="w-3.5 h-3.5" />
-                                        <span>{format(new Date(order.createdAt), "MMM d, yyyy")}</span>
+                                        <TimeAgo date={order.createdAt} />
                                     </div>
                                 </div>
 

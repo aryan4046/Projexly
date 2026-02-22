@@ -34,6 +34,8 @@ import { toast } from "sonner";
 
 import { studentNavItems as navItems } from "../../../config/navigation";
 
+import { TimeAgo } from "../../components/ui/time-ago";
+
 export function StudentDashboard() {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -379,9 +381,9 @@ export function StudentDashboard() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-semibold truncate text-foreground">{order.gig.title}</h3>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                          <Clock className="w-3 h-3" /> Due {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3" /> Due <TimeAgo date={order.createdAt} />
+                          </div>
                       </div>
                       <span className="text-xs font-bold text-primary">${order.price}</span>
                     </div>
@@ -579,7 +581,7 @@ function RecentActivity() {
             <div key={activity.id} className="relative">
               <span className="absolute -left-[31px] top-1 h-4 w-4 rounded-full border-2 border-background bg-indigo-500 shadow-sm" />
               <p className="text-sm font-medium text-foreground">{activity.text}</p>
-              <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        <TimeAgo date={activity.time} className="text-xs text-muted-foreground" />
             </div>
           ))}
         </div>
