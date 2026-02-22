@@ -293,7 +293,11 @@ exports.resendOTP = async (req, res) => {
       pendingUser.createdAt = Date.now();
       await pendingUser.save();
 
-      console.log(`[AUTH] Resend OTP (Pending) for ${email}: ${rawOtp}`);
+      // Fallback: Log OTP to console VERY LOUDLY for Render logs
+      console.log("========================================");
+      console.log(`[AUTH] RESEND OTP (Pending) FOR ${email}: ${rawOtp}`);
+      console.log("========================================");
+
 
       sendEmail({
         to: email,
@@ -326,7 +330,11 @@ exports.resendOTP = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
 
-    console.log(`[AUTH] Resend OTP (User) for ${email}: ${rawOtp}`);
+    // Fallback: Log OTP to console VERY LOUDLY for Render logs
+    console.log("========================================");
+    console.log(`[AUTH] RESEND OTP (User) FOR ${email}: ${rawOtp}`);
+    console.log("========================================");
+
 
     // Send Email
     try {
