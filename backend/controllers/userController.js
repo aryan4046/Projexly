@@ -128,6 +128,9 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid email" });
     }
+    if (!user.password) {
+      return res.status(400).json({ message: "This email is associated with a social login. Please use Google or GitHub to sign in." });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
