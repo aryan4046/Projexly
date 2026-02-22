@@ -35,8 +35,11 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Fallback: Log OTP to console for development/testing
-    console.log(`[AUTH] OTP for ${email}: ${rawOtp}`);
+    // Fallback: Log OTP to console VERY LOUDLY for Render logs
+    console.log("========================================");
+    console.log(`[AUTH] OTP FOR ${email}: ${rawOtp}`);
+    console.log("========================================");
+
 
     // 3. Upsert to PendingUser (updates if already pending)
     await PendingUser.findOneAndUpdate(
@@ -118,8 +121,11 @@ exports.login = async (req, res) => {
 
       await user.save();
 
-      // Fallback: Log OTP to console for development/testing
-      console.log(`[AUTH] Login OTP for ${user.email}: ${rawOtp}`);
+      // Fallback: Log OTP to console VERY LOUDLY for Render logs
+      console.log("========================================");
+      console.log(`[AUTH] LOGIN OTP FOR ${user.email}: ${rawOtp}`);
+      console.log("========================================");
+
 
       // Send Email
       try {

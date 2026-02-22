@@ -17,34 +17,31 @@ const sendEmail = async (options) => {
 
         // Lazy initialization
         if (!transporter) {
-            const port = parseInt(process.env.SMTP_PORT) || 587;
-            const isSecure = process.env.SMTP_SECURE === "true"; // true for 465, false for 587 (STARTTLS)
-
+            console.log("[EMAIL] Initializing new transporter with Protocol Logging...");
             transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST || "smtp.gmail.com",
-                port: port,
-                secure: isSecure,
+                service: "gmail",
                 auth: {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS,
                 },
+                debug: true, // Show protocol logs in console
+                logger: true, // Log protocol details
                 tls: {
-                    rejectUnauthorized: false // Necessary for many cloud hosting environments
-                },
-                connectionTimeout: 15000,
-                greetingTimeout: 15000,
+                    rejectUnauthorized: false
+                }
             });
 
-            // Verify connection configuration
+            // Fast verification
             try {
                 await transporter.verify();
-                console.log(`[EMAIL] SMTP connection verified (Port: ${port}, Secure: ${isSecure})`);
+                console.log("[EMAIL] SMTP connection verified successfully (service: gmail)");
             } catch (verifyErr) {
                 console.error("[EMAIL] SMTP Verification Failed:", verifyErr.message);
-                transporter = null; // Re-attempt on next request
-                throw verifyErr;
+                // Don't throw here to avoid crashing the current request if we can retry
+                transporter = null; 
             }
         }
+
 
 
 
