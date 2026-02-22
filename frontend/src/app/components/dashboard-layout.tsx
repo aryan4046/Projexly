@@ -7,7 +7,7 @@ import { io, Socket } from "socket.io-client";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import {
-  Code,
+  Layers,
   Bell,
   MessageSquare,
   ChevronDown,
@@ -264,11 +264,11 @@ export function DashboardLayout({ children, navItems, userType, theme = "indigo"
                   <Menu className="w-6 h-6" />
                 )}
               </button>
-              <Link to="/" className="flex items-center gap-2">
-                <div className={`w-8 h-8 bg-gradient-to-br ${currentTheme.gradient} rounded-lg flex items-center justify-center shadow-lg ${currentTheme.shadow}`}>
-                  <Code className="w-5 h-5 text-white" />
+              <Link to="/" className="flex items-center gap-3 group">
+                <div className={`w-10 h-10 bg-gradient-to-br ${currentTheme.gradient} rounded-xl flex items-center justify-center shadow-lg ${currentTheme.shadow} group-hover:scale-110 transition-transform duration-300 ring-4 ring-white/10`}>
+                  <Layers className="w-6 h-6 text-white" />
                 </div>
-                <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.gradient}`}>
+                <span className={`text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.gradient} tracking-tight`}>
                   Projexly
                 </span>
               </Link>

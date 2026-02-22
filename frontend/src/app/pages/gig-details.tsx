@@ -77,24 +77,26 @@ export function GigDetails() {
     return (
         <DashboardLayout navItems={navItems} userType="student" theme="indigo">
             <div className="container mx-auto py-8">
-                {/* Breadcrumbs & Back Button */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Link to="/student/dashboard" className="hover:text-indigo-600 transition-colors font-medium">Home</Link>
-                        <ChevronRight className="w-4 h-4 opacity-50" />
-                        <Link to="/gigs" className="hover:text-indigo-600 transition-colors font-medium">Marketplace</Link>
-                        <ChevronRight className="w-4 h-4 opacity-50" />
-                        <span className="text-foreground font-bold truncate max-w-[200px]">{gig.title}</span>
-                    </nav>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="rounded-full bg-white/50 backdrop-blur-md border-white/40 shadow-sm hover:bg-white/80 transition-all font-bold text-indigo-600 group w-fit"
-                        onClick={() => navigate(-1)}
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                        Go Back
-                    </Button>
+                {/* Header Section: Back Button & Breadcrumbs */}
+                <div className="flex flex-col gap-6 mb-10">
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-full bg-white/60 backdrop-blur-md border-white/40 shadow-sm hover:bg-white/90 transition-all font-black text-indigo-600 group px-5 h-11 shrink-0"
+                            onClick={() => navigate(-1)}
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                            Go Back
+                        </Button>
+                        <nav className="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden">
+                            <Link to="/student/dashboard" className="hover:text-indigo-600 transition-colors font-bold shrink-0">Home</Link>
+                            <ChevronRight className="w-4 h-4 opacity-30 shrink-0" />
+                            <Link to="/gigs" className="hover:text-indigo-600 transition-colors font-bold shrink-0">Marketplace</Link>
+                            <ChevronRight className="w-4 h-4 opacity-30 shrink-0" />
+                            <span className="text-foreground font-black truncate max-w-[150px] md:max-w-[300px]">{gig.title}</span>
+                        </nav>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
