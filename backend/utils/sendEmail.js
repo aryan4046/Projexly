@@ -4,36 +4,32 @@ const nodemailer = require("nodemailer");
  * Robust email sending utility with detailed logging
  * @param {Object} options - {to, subject, text, html}
  */
-let transporter;
-
 const sendEmail = async (options) => {
     try {
-        console.log(`[EMAIL] Attempting to send email to: ${options.to}`);
+        console.log(`[EMAIL] Attempting to send to: ${options.to}`);
+        console.log(`[EMAIL] Using account: ${process.env.SMTP_USER}`);
 
-        // Lazy initialization
-        if (!transporter) {
-            console.log("[EMAIL] Initializing new transporter...");
-            transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS,
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            });
-
-            // Verification
-            try {
-                await transporter.verify();
-                console.log("[EMAIL] SMTP connection verified successfully");
-            } catch (verifyErr) {
-                console.error("[EMAIL] SMTP Verification Failed:", verifyErr.message);
-                transporter = null;
-                throw verifyErr;
-            }
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            throw new Error("SMTP credentials missing from environment variables");
         }
+
+        // Fresh transporter for every request during debugging
+        const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465, // Using 465/secure for Gmail is often more stable
+            secure: true,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+
+        // Verification
+        await transporter.verify();
+        console.log("[EMAIL] SMTP Connection Verified");
 
         // Define email options
         const mailOptions = {
@@ -46,12 +42,12 @@ const sendEmail = async (options) => {
 
         // Send email
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL] Success: Email sent to ${options.to}`);
+        console.log(`[EMAIL] SUCCESS: Message sent to ${options.to}`);
+        console.log(`[EMAIL] Response: ${info.response}`);
 
         return info;
     } catch (error) {
-        console.error(`[EMAIL] ERROR: Failed to send email to ${options.to}`);
-        console.error(`[EMAIL] Error Message: ${error.message}`);
+        console.error(`[EMAIL] ERROR for ${options.to}: ${error.message}`);
         throw error;
     }
 };
