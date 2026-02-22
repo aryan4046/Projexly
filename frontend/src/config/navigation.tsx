@@ -4,12 +4,13 @@ import {
     FileText,
     TrendingUp,
     DollarSign,
-    Briefcase
+    Briefcase,
+    Search
 } from "lucide-react";
 
 export const studentNavItems = [
     { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: "Find Services", path: "/gigs", icon: <DollarSign className="w-5 h-5" /> },
+    { label: "Find Services", path: "/gigs", icon: <Search className="w-5 h-5" /> },
     { label: "My Orders", path: "/orders", icon: <TrendingUp className="w-5 h-5" /> },
     { label: "My Projects", path: "/student/projects", icon: <FolderKanban className="w-5 h-5" /> },
     { label: "Proposals", path: "/student/proposals", icon: <FileText className="w-5 h-5" /> },
