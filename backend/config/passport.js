@@ -38,8 +38,14 @@ passport.use(
                 if (user) {
                     if (!user.isVerified) {
                         user.isVerified = true;
-                        await user.save();
                     }
+                    
+                    // Update role if explicitly selected during OAuth flow
+                    if (req.session.oauthRole && user.role !== req.session.oauthRole) {
+                        user.role = req.session.oauthRole;
+                    }
+                    
+                    await user.save();
                     return done(null, user);
                 }
 
@@ -102,8 +108,14 @@ passport.use(
                 if (user) {
                     if (!user.isVerified) {
                         user.isVerified = true;
-                        await user.save();
                     }
+
+                    // Update role if explicitly selected during OAuth flow
+                    if (req.session.oauthRole && user.role !== req.session.oauthRole) {
+                        user.role = req.session.oauthRole;
+                    }
+
+                    await user.save();
                     return done(null, user);
                 }
 
