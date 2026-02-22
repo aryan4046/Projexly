@@ -4,18 +4,28 @@ const nodemailer = require("nodemailer");
  * Robust email sending utility with detailed logging
  * @param {Object} options - {to, subject, text, html}
  */
+// Reusable transporter object
+let transporter;
+
+/**
+ * Robust email sending utility with detailed logging
+ * @param {Object} options - {to, subject, text, html}
+ */
 const sendEmail = async (options) => {
     try {
         console.log(`[EMAIL] Attempting to send email to: ${options.to}`);
 
-        // Create a reusable transporter object
-        const transporter = nodemailer.createTransport({
-            service: "gmail", // Using "service: 'gmail'" is more reliable than manual host/port for Gmail
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
+        // Lazy initialization
+        if (!transporter) {
+            transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS,
+                },
+            });
+        }
+
 
         // Define email options
         const mailOptions = {
@@ -46,5 +56,6 @@ const sendEmail = async (options) => {
         throw error;
     }
 };
+
 
 module.exports = sendEmail;
