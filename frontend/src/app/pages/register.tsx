@@ -333,8 +333,8 @@ export function Register() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 mt-2">
-                    <div className="relative flex items-center mt-1">
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="relative flex items-center">
                       <input
                         type="checkbox"
                         required
