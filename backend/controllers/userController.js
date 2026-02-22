@@ -194,62 +194,81 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Please provide email and OTP" });
     }
 
-    // Find in PendingUser first
+    // 1. Check PendingUser (Registration Flow)
     const pendingUser = await PendingUser.findOne({ email });
-    if (!pendingUser) {
-      // If not in pending, check if they are already verified in User
-      const alreadyVerified = await User.findOne({ email });
-      if (alreadyVerified) {
-        return res.status(400).json({ message: "User is already verified" });
+    if (pendingUser) {
+      if (otp !== pendingUser.otp) {
+        return res.status(400).json({ message: "Invalid OTP" });
       }
-      return res.status(400).json({ message: "OTP expired or invalid session. Please register again." });
+
+      // Create official User
+      const user = await User.create({
+        name: pendingUser.name,
+        email: pendingUser.email,
+        password: pendingUser.password,
+        role: pendingUser.role,
+        isVerified: true
+      });
+
+      // Delete from PendingUser
+      await PendingUser.deleteOne({ email });
+
+      const token = generateToken(user._id, user.role);
+      
+      // Trigger Welcome Notification
+      sendNotification(req.app, {
+        recipient: user._id,
+        type: "welcome",
+        title: "Welcome to Projexly! 🚀",
+        message: `We're excited to have you here, ${user.name}. Let's start building!`,
+      }).catch(err => console.error(`[NOTIFICATION] Error: ${err.message}`));
+
+      return res.json({
+        message: "Email verified successfully.",
+        user: { id: user._id, _id: user._id, name: user.name, email: user.email, role: user.role },
+        token
+      });
     }
 
-    // Check OTP (Instant plain-text comparison)
-    if (otp !== pendingUser.otp) {
+    // 2. Check main User collection (Login verification flow)
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Account not found. Please register." });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User is already verified" });
+    }
+
+    // Check OTP and Expiry
+    if (user.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // 1. Create the official User
-    const user = await User.create({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      role: pendingUser.role,
-      isVerified: true
-    });
+    if (user.otpExpires && new Date() > user.otpExpires) {
+      return res.status(400).json({ message: "OTP has expired. Please resend." });
+    }
 
-    // 2. Delete from PendingUser
-    await PendingUser.deleteOne({ email });
+    // Verify User
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
 
-    res.json({
-      message: "Email verified successfully.",
-      user: {
-        id: user._id,
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token: generateToken(user._id, user.role),
-    });
+    const token = generateToken(user._id, user.role);
 
-    // Trigger New User Welcome Notification (De-coupled)
-    sendNotification(req.app, {
-      recipient: user._id,
-      type: "welcome",
-      title: "Welcome to Projexly! 🚀",
-      message: `We're excited to have you here, ${user.name}. Let's start building something great together!`,
-    }).catch(err => {
-      console.error(`[NOTIFICATION] Background New User Notification failed for ${user._id}`);
-      console.error(`[NOTIFICATION] Error Details: ${err.message}`);
+    return res.json({
+      message: "Login successful and email verified.",
+      user: { id: user._id, _id: user._id, name: user.name, email: user.email, role: user.role },
+      token
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error(`[AUTH] Verify OTP Error:`, error);
+    res.status(500).json({ message: "Server error during verification" });
   }
 };
+
 
 // ==============================
 // RESEND OTP
@@ -262,25 +281,54 @@ exports.resendOTP = async (req, res) => {
       return res.status(400).json({ message: "Please provide an email" });
     }
 
-    // Look in PendingUser (unverified)
+    const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 1. Check PendingUser
     const pendingUser = await PendingUser.findOne({ email });
-    if (!pendingUser) {
-      return res.status(400).json({ message: "Session expired. Please register again." });
+    if (pendingUser) {
+      pendingUser.otp = rawOtp;
+      pendingUser.createdAt = Date.now();
+      await pendingUser.save();
+
+      console.log(`[AUTH] Resend OTP (Pending) for ${email}: ${rawOtp}`);
+
+      sendEmail({
+        to: email,
+        subject: "Projexly - New OTP Request",
+        text: `Your new OTP is ${rawOtp}.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
+            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
+            </div>
+          </div>
+        `,
+      }).catch(err => console.error(`[AUTH] Resend Email Error: ${err.message}`));
+
+      return res.json({ message: "A new OTP has been sent." });
     }
 
-    const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    pendingUser.otp = rawOtp; // Plain text
-    pendingUser.createdAt = Date.now(); // Reset TTL
-    await pendingUser.save();
+    // 2. Check main User
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Account not found." });
+    }
 
-    // Fallback: Log OTP to console for development/testing
-    console.log(`[AUTH] Resend OTP for ${email}: ${rawOtp}`);
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User is already verified." });
+    }
 
-    // Send Email in background
+    user.otp = rawOtp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save();
+
+    console.log(`[AUTH] Resend OTP (User) for ${email}: ${rawOtp}`);
+
     sendEmail({
       to: email,
       subject: "Projexly - New OTP Request",
-      text: `Your new OTP is ${rawOtp}.`,
+      text: `Your new OTP is ${rawOtp}. It is valid for 5 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
           <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
@@ -289,19 +337,16 @@ exports.resendOTP = async (req, res) => {
           </div>
         </div>
       `,
-    }).catch(err => {
-      console.error(`[AUTH] CRITICAL: Background Resend OTP Email failed for ${email}`);
-      console.error(`[AUTH] Error Details: ${err.message}`);
-    });
-
-
+    }).catch(err => console.error(`[AUTH] Resend Email Error: ${err.message}`));
 
     return res.json({ message: "A new OTP has been sent." });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error(`[AUTH] Resend OTP Error:`, error);
+    res.status(500).json({ message: "Server error during resending OTP" });
   }
 };
+
 
 // ==============================
 // GET CURRENT USER
