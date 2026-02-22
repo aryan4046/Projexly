@@ -25,12 +25,13 @@ interface CreateGigForm {
 }
 
 export function CreateGig() {
-    const { register, handleSubmit, setValue, reset } = useForm<CreateGigForm>();
+    const { register, handleSubmit, setValue, reset, watch } = useForm<CreateGigForm>();
     const navigate = useNavigate();
     const { id } = useParams();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const isEditing = !!id;
+    const category = watch("category");
 
     useEffect(() => {
         if (isEditing) {
@@ -110,7 +111,7 @@ export function CreateGig() {
 
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select onValueChange={(val) => setValue("category", val)} defaultValue={isEditing ? undefined : ""}> {/* Need to handle default value for select correctly with RHF but setValue works */}
+                                <Select onValueChange={(val) => setValue("category", val)} value={category}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -120,6 +121,9 @@ export function CreateGig() {
                                         <SelectItem value="Digital Marketing">Digital Marketing</SelectItem>
                                         <SelectItem value="Writing">Writing</SelectItem>
                                         <SelectItem value="Video Animation">Video Animation</SelectItem>
+                                        <SelectItem value="AI Services">AI Services</SelectItem>
+                                        <SelectItem value="Music & Audio">Music & Audio</SelectItem>
+                                        <SelectItem value="Programming & Tech">Programming & Tech</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

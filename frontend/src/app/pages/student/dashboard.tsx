@@ -26,6 +26,8 @@ import {
   MessageSquare,
   Search
 } from "lucide-react";
+import { io } from "socket.io-client";
+import { Gig } from "../../../api/gigs";
 import { CustomDatePicker } from "../../components/ui/custom-date-picker";
 import { toast } from "sonner";
 
@@ -79,6 +81,18 @@ export function StudentDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+
+    socket.on("gig_new", (newGig: Gig) => {
+      setRecommendedGigs(prev => [newGig, ...prev.slice(0, 3)]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();

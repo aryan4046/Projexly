@@ -22,6 +22,11 @@ exports.createGig = async (req, res) => {
             freelancer: req.user.id,
         });
 
+        // Emit real-time event
+        const io = req.app.get("io");
+        const populatedGig = await Gig.findById(gig._id).populate("freelancer", "name email");
+        io.emit("gig_new", populatedGig);
+
         res.status(201).json(gig);
     } catch (error) {
         console.error(error);
@@ -127,7 +132,13 @@ exports.deleteGig = async (req, res) => {
             return res.status(401).json({ message: "Not authorized" });
         }
 
+        const gigId = gig._id;
         await gig.deleteOne();
+
+        // Emit real-time event
+        const io = req.app.get("io");
+        io.emit("gig_deleted", gigId);
+
         res.json({ message: "Gig removed" });
     } catch (error) {
         console.error(error);

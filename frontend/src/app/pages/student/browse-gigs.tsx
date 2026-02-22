@@ -12,6 +12,7 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { io } from "socket.io-client";
 
 const CATEGORIES = [
     "Web Development",
@@ -54,6 +55,22 @@ export function BrowseGigs() {
         }, 300);
         return () => clearTimeout(timer);
     }, [search, selectedCategory, sort]);
+
+    useEffect(() => {
+        const socket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+
+        socket.on("gig_new", (newGig: Gig) => {
+            setGigs(prev => [newGig, ...prev]);
+        });
+
+        socket.on("gig_deleted", (deletedGigId: string) => {
+            setGigs(prev => prev.filter(g => g._id !== deletedGigId));
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-background text-foreground">
