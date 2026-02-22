@@ -4,10 +4,19 @@ const { Resend } = require('resend');
  * Robust email sending utility using Resend
  * @param {Object} options - {to, subject, text, html}
  */
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
 
 const sendEmail = async (options) => {
     try {
+        // Lazy initialization to prevent crash if key is missing at startup
+        if (!resend) {
+            if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_your_api_key_here') {
+                console.error("[EMAIL] CRITICAL: RESEND_API_KEY is missing or invalid in environment variables.");
+                throw new Error("Missing RESEND_API_KEY. Please set it in your environment variables.");
+            }
+            resend = new Resend(process.env.RESEND_API_KEY);
+        }
+
         console.log(`[EMAIL] Attempting to send email to: ${options.to}`);
 
         const result = await resend.emails.send({
