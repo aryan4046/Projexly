@@ -3,8 +3,8 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { projectAPI } from "../../../api/projects";
 import { orderAPI } from "../../../api/orders";
 import { authAPI } from "../../../api/auth";
-import { gigAPI } from "../../../api/gigs"; // Import gigAPI
-import { GigCard } from "../../components/gig-card"; // Import GigCard
+import { gigAPI } from "../../../api/gigs"; 
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { DashboardLayout } from "../../components/dashboard-layout";
@@ -24,7 +24,8 @@ import {
   ArrowRight,
   Briefcase,
   MessageSquare,
-  Search
+  Search,
+  TrendingUp
 } from "lucide-react";
 import { io } from "socket.io-client";
 import { Gig } from "../../../api/gigs";
@@ -310,8 +311,40 @@ export function StudentDashboard() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {recommendedGigs.length > 0 ? (
-                  recommendedGigs.map((gig) => (
-                    <GigCard key={gig._id} gig={gig} />
+                  recommendedGigs.map((gig, idx) => (
+                    <motion.div
+                      key={gig._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + (idx * 0.1) }}
+                      className="glass-card rounded-2xl p-6 transition-all hover:scale-[1.02] hover:shadow-xl border border-white/40 bg-white/60 relative overflow-hidden group cursor-pointer"
+                      onClick={() => navigate(`/gigs/${gig._id}`)}
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-indigo-500/10" />
+                      
+                      <div className="flex items-start justify-between relative z-10 gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                             <Avatar className="h-6 w-6 ring-1 ring-indigo-100">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${gig.freelancer?.name}`} />
+                              <AvatarFallback className="text-[8px] font-bold">{gig.freelancer?.name?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{gig.freelancer?.name}</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-foreground group-hover:text-indigo-600 transition-colors line-clamp-1">{gig.title}</h3>
+                          <div className="flex items-center gap-3 mt-4 text-[11px] font-bold text-muted-foreground whitespace-nowrap">
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-indigo-400" /> {gig.deliveryTime}d Delivery</span>
+                            <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-emerald-400" /> {gig.category}</span>
+                          </div>
+                        </div>
+                        <div className="text-center shrink-0">
+                          <div className="p-2.5 rounded-xl bg-indigo-600/5 border border-indigo-100/50 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                            <div className="text-xs font-bold leading-none opacity-60 group-hover:opacity-100">Starting</div>
+                            <div className="text-2xl font-black mt-1">${gig.price}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-10 text-muted-foreground bg-muted/30 rounded-xl border border-dashed hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/gigs')}>
