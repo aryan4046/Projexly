@@ -37,6 +37,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 // ==============================
 router.get(
   "/google",
+  (req, res, next) => {
+    if (req.query.role) {
+      req.session.oauthRole = req.query.role;
+    }
+    next();
+  },
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
@@ -63,6 +69,12 @@ router.get(
 // ==============================
 router.get(
   "/github",
+  (req, res, next) => {
+    if (req.query.role) {
+      req.session.oauthRole = req.query.role;
+    }
+    next();
+  },
   passport.authenticate("github", { scope: ["user:email"] })
 );
 

@@ -29,8 +29,9 @@ passport.use(
             clientID: process.env.GOOGLE_CLIENT_ID || "temp_google_id",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "temp_google_secret",
             callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/google/callback`,
+            passReqToCallback: true,
         },
-        async (accessToken, refreshToken, profile, done) => {
+        async (req, accessToken, refreshToken, profile, done) => {
             try {
                 let user = await User.findOne({ googleId: profile.id });
 
@@ -64,7 +65,7 @@ passport.use(
                     name: profile.displayName,
                     email: email || `${profile.id}@google.oauth`,
                     isVerified: true,
-                    role: "student",
+                    role: req.session.oauthRole || "student",
                     profilePicture: profilePicture,
                 });
 
@@ -86,8 +87,9 @@ passport.use(
             clientSecret: process.env.GITHUB_CLIENT_SECRET || "temp_github_secret",
             callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/github/callback`,
             scope: ["user:email"],
+            passReqToCallback: true,
         },
-        async (accessToken, refreshToken, profile, done) => {
+        async (req, accessToken, refreshToken, profile, done) => {
             try {
                 let user = await User.findOne({ githubId: profile.id });
 
@@ -121,7 +123,7 @@ passport.use(
                     name: profile.displayName || profile.username,
                     email: email || `${profile.username}@github.oauth`,
                     isVerified: true,
-                    role: "student",
+                    role: req.session.oauthRole || "student",
                     profilePicture: profilePicture,
                 });
 

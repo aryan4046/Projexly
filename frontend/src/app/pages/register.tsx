@@ -367,7 +367,7 @@ export function Register() {
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`}
+                      onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google?role=${userType}`}
                       className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 h-14 rounded-2xl text-white font-bold hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.95]"
                     >
                       <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -380,7 +380,7 @@ export function Register() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`}
+                      onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github?role=${userType}`}
                       className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 h-14 rounded-2xl text-white font-bold hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.95]"
                     >
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
