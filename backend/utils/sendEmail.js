@@ -17,33 +17,35 @@ const sendEmail = async (options) => {
 
         // Lazy initialization
         if (!transporter) {
+            const port = parseInt(process.env.SMTP_PORT) || 587;
+            const isSecure = process.env.SMTP_SECURE === "true"; // true for 465, false for 587 (STARTTLS)
+
             transporter = nodemailer.createTransport({
-                host: "smtp.gmail.com",
-                port: 587,
-                secure: false, // Use STARTTLS
+                host: process.env.SMTP_HOST || "smtp.gmail.com",
+                port: port,
+                secure: isSecure,
                 auth: {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS,
                 },
                 tls: {
-                    ciphers: 'SSLv3',
-                    rejectUnauthorized: false
+                    rejectUnauthorized: false // Necessary for many cloud hosting environments
                 },
                 connectionTimeout: 15000,
                 greetingTimeout: 15000,
             });
 
-
             // Verify connection configuration
             try {
                 await transporter.verify();
-                console.log("[EMAIL] SMTP connection verified successfully");
+                console.log(`[EMAIL] SMTP connection verified (Port: ${port}, Secure: ${isSecure})`);
             } catch (verifyErr) {
                 console.error("[EMAIL] SMTP Verification Failed:", verifyErr.message);
-                transporter = null; // Reset so it retries next time
+                transporter = null; // Re-attempt on next request
                 throw verifyErr;
             }
         }
+
 
 
 
@@ -54,13 +56,8 @@ const sendEmail = async (options) => {
             subject: options.subject,
             text: options.text,
             html: options.html,
-            priority: 'high',
-            headers: {
-                'X-Priority': '1 (Highest)',
-                'X-MSMail-Priority': 'High',
-                'Importance': 'High'
-            }
         };
+
 
 
         // Send email
