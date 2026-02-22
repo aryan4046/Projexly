@@ -4,7 +4,7 @@ import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { freelancerNavItems } from "@/config/navigation";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Progress } from "../../components/ui/progress";
 import {
   FileText,
@@ -13,16 +13,17 @@ import {
   MoreHorizontal,
   ExternalLink,
   Trash2,
-  ArrowLeft,
   AlertCircle,
   Search,
   CheckCircle2,
-  Hourglass
+  Hourglass,
+  User as UserIcon
 } from "lucide-react";
+import { io } from "socket.io-client";
 import { proposalAPI, Proposal } from "../../../api/proposals";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +106,15 @@ const ProposalItem = ({ proposal, onWithdraw }: { proposal: Proposal; onWithdraw
                   <DollarSign className="w-3.5 h-3.5" />
                   Bid: ${proposal.bidAmount?.toLocaleString()}
                 </span>
+                {proposal.project.student && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <UserIcon className="w-3.5 h-3.5" />
+                      Client: {proposal.project.student.name}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -171,7 +181,6 @@ const ProposalItem = ({ proposal, onWithdraw }: { proposal: Proposal; onWithdraw
 // --- Main Page ---
 
 export function FreelancerProposals() {
-  const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,6 +189,30 @@ export function FreelancerProposals() {
 
   useEffect(() => {
     fetchProposals();
+
+    const socket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+    
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      socket.emit("join", user._id || user.id);
+    }
+
+    socket.on("proposal_updated", (data: { proposalId: string; status: 'accepted' | 'rejected'; orderId?: string }) => {
+      setProposals(prev => prev.map(p => 
+        p._id === data.proposalId ? { ...p, status: data.status } : p
+      ));
+      
+      if (data.status === 'accepted') {
+        toast.success("Your proposal was accepted! 🎉");
+      } else if (data.status === 'rejected') {
+        toast.error("Your proposal was rejected.");
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchProposals = async () => {

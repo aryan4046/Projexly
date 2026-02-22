@@ -29,6 +29,19 @@ exports.createProposal = async (req, res) => {
         relatedId: proposal._id,
       });
 
+      // Emit real-time proposal event to the student
+      const io = req.app.get("io");
+      const userSockets = req.app.get("userSockets");
+      const studentSocketId = userSockets.get(project.student.toString());
+      if (studentSocketId) {
+        // Fetch the proposal with populated freelancer info to send via socket
+        const populatedProposal = await Proposal.findById(proposal._id)
+          .populate("project", "title status budget")
+          .populate("freelancer", "name email");
+        
+        io.to(studentSocketId).emit("proposal_new", populatedProposal);
+      }
+
       // Trigger Notification for the Freelancer (Sender)
       await sendNotification(req.app, {
         recipient: req.user._id,
@@ -54,7 +67,14 @@ exports.getMyProposals = async (req, res) => {
 
     // 1. Fetch proposals
     const proposals = await Proposal.find({ freelancer: req.user._id })
-      .populate("project", "title status budget")
+      .populate({
+        path: "project",
+        select: "title status budget student",
+        populate: {
+          path: "student",
+          select: "name"
+        }
+      })
       .sort({ createdAt: -1 });
 
     console.log(`[API] Found ${proposals.length} proposals`);
@@ -136,6 +156,18 @@ exports.acceptProposal = async (req, res) => {
       relatedId: order._id,
     });
 
+    // Emit real-time update to the freelancer
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
+    const freelancerSocketId = userSockets.get(proposal.freelancer.toString());
+    if (freelancerSocketId) {
+      io.to(freelancerSocketId).emit("proposal_updated", {
+        proposalId: proposal._id,
+        status: "accepted",
+        orderId: order._id
+      });
+    }
+
     res.json({ message: "Proposal accepted and order created", order });
   } catch (error) {
     console.error("[API] Accept Proposal Error:", error);
@@ -156,6 +188,17 @@ exports.rejectProposal = async (req, res) => {
 
     proposal.status = "rejected";
     await proposal.save();
+
+    // Emit real-time update to the freelancer
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
+    const freelancerSocketId = userSockets.get(proposal.freelancer.toString());
+    if (freelancerSocketId) {
+      io.to(freelancerSocketId).emit("proposal_updated", {
+        proposalId: proposal._id,
+        status: "rejected"
+      });
+    }
 
     res.json({ message: "Proposal rejected", proposal });
   } catch (error) {

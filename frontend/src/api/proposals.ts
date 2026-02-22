@@ -7,6 +7,9 @@ export interface Proposal {
         title: string;
         budget: number;
         status: string;
+        student?: {
+            name: string;
+        };
     };
     freelancer: {
         _id: string;

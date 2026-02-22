@@ -5,8 +5,6 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import {
-  LayoutDashboard,
-  FolderKanban,
   FileText,
   DollarSign,
   Clock,
@@ -24,6 +22,7 @@ import {
 import { proposalAPI, Proposal } from "../../../api/proposals";
 import { toast } from "sonner";
 import { motion } from "motion/react";
+import { io } from "socket.io-client";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -103,6 +102,30 @@ export function StudentProposals() {
       }
     };
     fetchProposals();
+
+    const socket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000");
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      socket.emit("join", user._id || user.id);
+    }
+
+    socket.on("proposal_new", (newProposal: Proposal) => {
+      setProposals(prev => [newProposal, ...prev]);
+      toast.success(`You received a new proposal from ${newProposal.freelancer.name}!`, {
+        action: {
+          label: "View",
+          onClick: () => {
+            // scrollTo or navigate if needed
+          }
+        }
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const handleAcceptClick = (proposal: Proposal) => {
@@ -136,7 +159,7 @@ export function StudentProposals() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "accepted": return "bg-green-100/50 text-green-700 border-green-200";
       case "rejected": return "bg-red-100/50 text-red-700 border-red-200";
       default: return "bg-yellow-100/50 text-yellow-700 border-yellow-200";
@@ -187,8 +210,8 @@ export function StudentProposals() {
               </div>
             </div>
 
-            <Badge variant="secondary" className={`capitalize px-3 py-1 ${getStatusColor(proposal.project.status)}`}>
-              {proposal.project.status || "Pending"}
+            <Badge variant="secondary" className={`capitalize px-3 py-1 ${getStatusColor(proposal.status)}`}>
+              {proposal.status || "Pending"}
             </Badge>
           </div>
 
@@ -357,7 +380,7 @@ export function StudentProposals() {
               <div>
                 <div className="text-sm font-medium text-muted-foreground mb-1 group-hover:text-green-600 transition-colors">Accepted</div>
                 <div className="text-4xl font-extrabold text-foreground">
-                  {proposals.filter(p => p.status === 'accepted').length}
+                  {proposals.filter(p => p.status?.toLowerCase() === 'accepted').length}
                 </div>
               </div>
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
