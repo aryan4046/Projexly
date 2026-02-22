@@ -29,6 +29,11 @@ const sendEmail = async (options) => {
 
         if (result.error) {
             console.error(`[EMAIL] Resend Error:`, result.error);
+            
+            if (result.error.message.includes("testing emails to your own email address")) {
+                console.error("[EMAIL] HELP: You are in Resend Sandbox Mode. You must verify your domain at resend.com/domains to send to others.");
+            }
+
             throw new Error(result.error.message);
         }
 
