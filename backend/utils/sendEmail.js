@@ -4,19 +4,17 @@ const nodemailer = require("nodemailer");
  * Robust email sending utility with detailed logging
  * @param {Object} options - {to, subject, text, html}
  */
-const sendEmail = async (options) => {
-    try {
-        console.log(`[EMAIL] Attempting to send to: ${options.to}`);
-        console.log(`[EMAIL] Using account: ${process.env.SMTP_USER}`);
+let transporter;
 
-        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            throw new Error("SMTP credentials missing from environment variables");
-        }
-
-        // Fresh transporter for every request during debugging
-        const transporter = nodemailer.createTransport({
+/**
+ * Initialize transporter once and reuse it
+ */
+const getTransporter = () => {
+    if (!transporter) {
+        console.log("[EMAIL] Initializing persistent transporter...");
+        transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
-            port: 465, // Using 465/secure for Gmail is often more stable
+            port: 465,
             secure: true,
             auth: {
                 user: process.env.SMTP_USER,
@@ -24,14 +22,26 @@ const sendEmail = async (options) => {
             },
             tls: {
                 rejectUnauthorized: false
-            }
+            },
+            // Performance settings
+            pool: true, 
+            maxConnections: 5,
+            maxMessages: 100
         });
 
-        // Verification
-        await transporter.verify();
-        console.log("[EMAIL] SMTP Connection Verified");
+        // Verify in background, don't block
+        transporter.verify((error) => {
+            if (error) console.error("[EMAIL] Persistent SMTP Verification Failed:", error.message);
+            else console.log("[EMAIL] Persistent SMTP Connection Ready");
+        });
+    }
+    return transporter;
+};
 
-        // Define email options
+const sendEmail = async (options) => {
+    try {
+        console.log(`[EMAIL] Sending to: ${options.to}`);
+        
         const mailOptions = {
             from: `"Projexly" <${process.env.SMTP_USER}>`,
             to: options.to,
@@ -40,11 +50,10 @@ const sendEmail = async (options) => {
             html: options.html,
         };
 
-        // Send email
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL] SUCCESS: Message sent to ${options.to}`);
-        console.log(`[EMAIL] Response: ${info.response}`);
-
+        const activeTransporter = getTransporter();
+        const info = await activeTransporter.sendMail(mailOptions);
+        
+        console.log(`[EMAIL] SUCCESS: ${options.to} (Response: ${info.response})`);
         return info;
     } catch (error) {
         console.error(`[EMAIL] ERROR for ${options.to}: ${error.message}`);
