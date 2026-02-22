@@ -41,7 +41,8 @@ exports.register = async (req, res) => {
     console.log("========================================");
 
 
-    // 3. Upsert to PendingUser (updates if already pending)
+    // 3. [DISABLED FOR NOW] Upsert to PendingUser (updates if already pending)
+    /*
     await PendingUser.findOneAndUpdate(
       { email },
       {
@@ -54,8 +55,19 @@ exports.register = async (req, res) => {
       },
       { upsert: true, new: true }
     );
+    */
 
-    // 4. Send Email reliably
+    // 3. [NEW] Create official User directly (Bypassing OTP)
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "student",
+      isVerified: true
+    });
+
+    // 4. [DISABLED FOR NOW] Send Email reliably
+    /*
     try {
       await sendEmail({
         to: email,
@@ -84,6 +96,14 @@ exports.register = async (req, res) => {
         error: err.message 
       });
     }
+    */
+
+    // 4. [NEW] Respond success immediately
+    return res.status(201).json({
+      message: "Registration successful. Welcome to Projexly!",
+      user: { id: user._id, _id: user._id, name: user.name, email: user.email, role: user.role },
+      token: generateToken(user._id, user.role),
+    });
 
 
   } catch (error) {
@@ -115,6 +135,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
+    /*
     if (!user.isVerified) {
       // Generate a new OTP (Plain-text for speed)
       const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -160,6 +181,7 @@ exports.login = async (req, res) => {
       }
 
     }
+    */
 
     res.json({
       message: "Login successful",
