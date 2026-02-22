@@ -54,6 +54,12 @@ passport.use(
                         user.googleId = profile.id;
                         user.isVerified = true; // Trust Google's verification
                         user.profilePicture = profilePicture;
+                        
+                        // Update role if explicitly selected during OAuth flow
+                        if (req.session.oauthRole && user.role !== req.session.oauthRole) {
+                            user.role = req.session.oauthRole;
+                        }
+                        
                         await user.save();
                         return done(null, user);
                     }
@@ -112,6 +118,12 @@ passport.use(
                         user.githubId = profile.id;
                         user.isVerified = true; // Trust GitHub's verification
                         user.profilePicture = profilePicture;
+
+                        // Update role if explicitly selected during OAuth flow
+                        if (req.session.oauthRole && user.role !== req.session.oauthRole) {
+                            user.role = req.session.oauthRole;
+                        }
+
                         await user.save();
                         return done(null, user);
                     }
