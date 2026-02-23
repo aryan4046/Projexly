@@ -62,35 +62,29 @@ exports.register = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // 4. Send Email reliably
-    try {
-      await sendEmail({
-        to: email,
-        subject: "Projexly - Verify your email",
-        text: `Your OTP is ${rawOtp}.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-            <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
-            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-            </div>
+    // 4. Send Email (Non-blocking for speed)
+    sendEmail({
+      to: email,
+      subject: "Projexly - Verify your email",
+      text: `Your OTP is ${rawOtp}.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+          <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
+          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
           </div>
-          `,
-      });
-
-      // 5. Respond success ONLY if email worked
-      return res.status(201).json({
-        message: "Registration successful. Please verify your email.",
-        requiresOTP: true,
-        email: email,
-      });
-    } catch (err) {
+        </div>
+        `,
+    }).catch(err => {
       console.error(`[AUTH] CRITICAL Error: Registration Email failed for ${email}: ${err.message}`);
-      return res.status(500).json({ 
-        message: "Email delivery failed. Please check server logs or try again.",
-        error: err.message 
-      });
-    }
+    });
+
+    // 5. Respond success immediately
+    return res.status(201).json({
+      message: "Registration successful. Please verify your email.",
+      requiresOTP: true,
+      email: email,
+    });
 
 
   } catch (error) {
@@ -138,34 +132,28 @@ exports.login = async (req, res) => {
       console.log("========================================");
 
 
-      // Send Email
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: "Projexly - Verify your email",
-          text: `Your new OTP is ${rawOtp}.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-              <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
-              <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-              </div>
+      // Send Email (Non-blocking for speed)
+      sendEmail({
+        to: user.email,
+        subject: "Projexly - Verify your email",
+        text: `Your new OTP is ${rawOtp}.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
+            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
             </div>
-          `,
-        });
-
-        return res.status(403).json({
-          message: "Email not verified. A new OTP has been sent.",
-          requiresOTP: true,
-          email: user.email
-        });
-      } catch (err) {
+          </div>
+        `,
+      }).catch(err => {
         console.error(`[AUTH] CRITICAL Error: Login OTP Email failed for ${user.email}: ${err.message}`);
-        return res.status(500).json({ 
-          message: "Could not send verification email. Please try again later.",
-          error: err.message
-        });
-      }
+      });
+
+      return res.status(403).json({
+        message: "Email not verified. A new OTP has been sent.",
+        requiresOTP: true,
+        email: user.email
+      });
 
     }
 
@@ -302,26 +290,24 @@ exports.resendOTP = async (req, res) => {
       console.log("========================================");
 
 
-      try {
-        await sendEmail({
-          to: email,
-          subject: "Projexly - New OTP Request",
-          text: `Your new OTP is ${rawOtp}.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-              <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
-              <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-              </div>
+      // Send Email (Non-blocking)
+      sendEmail({
+        to: email,
+        subject: "Projexly - New OTP Request",
+        text: `Your new OTP is ${rawOtp}.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
+            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
             </div>
-          `,
-        });
-
-        return res.json({ message: "A new OTP has been sent." });
-      } catch (err) {
+          </div>
+        `,
+      }).catch(err => {
         console.error(`[AUTH] Resend Email Error (Pending): ${err.message}`);
-        return res.status(500).json({ message: "Resend failed. Email service down.", error: err.message });
-      }
+      });
+
+      return res.json({ message: "A new OTP has been sent." });
 
     }
 
@@ -344,30 +330,24 @@ exports.resendOTP = async (req, res) => {
     console.log("========================================");
 
 
-    // Send Email
-    try {
-      await sendEmail({
-        to: email,
-        subject: "Projexly - New OTP Request",
-        text: `Your new OTP is ${rawOtp}.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-            <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
-            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-            </div>
+    // Send Email (Non-blocking)
+    sendEmail({
+      to: email,
+      subject: "Projexly - New OTP Request",
+      text: `Your new OTP is ${rawOtp}.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+          <h2 style="color: #4f46e5; text-align: center;">New OTP Code 🔐</h2>
+          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
           </div>
-        `,
-      });
-
-      return res.json({ message: "A new OTP has been sent." });
-    } catch (err) {
+        </div>
+      `,
+    }).catch(err => {
       console.error(`[AUTH] CRITICAL Error: Resend Email failed for ${email}: ${err.message}`);
-      return res.status(500).json({ 
-        message: "Resend failed. Email service might be down.",
-        error: err.message
-      });
-    }
+    });
+
+    return res.json({ message: "A new OTP has been sent." });
 
 
   } catch (error) {
