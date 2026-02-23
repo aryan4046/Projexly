@@ -14,7 +14,7 @@ const getTransporter = () => {
         console.log("[EMAIL] Initializing persistent transporter...");
         transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
-            port: 465,
+            port: 587,
             secure: true,
             auth: {
                 user: process.env.SMTP_USER,

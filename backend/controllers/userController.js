@@ -48,8 +48,7 @@ exports.register = async (req, res) => {
     console.log("========================================");
 
 
-    // 3. [DISABLED FOR NOW] Upsert to PendingUser (updates if already pending)
-    /*
+    // 3. Upsert to PendingUser (updates if already pending)
     await PendingUser.findOneAndUpdate(
       { email },
       {
@@ -58,28 +57,17 @@ exports.register = async (req, res) => {
         password: hashedPassword,
         role: role || "student",
         otp: rawOtp, // Store plain OTP for speed
-        createdAt: Date.now() // Reset the 10-min countdown
+        createdAt: Date.now() // Reset the timestamp
       },
       { upsert: true, new: true }
     );
-    */
 
-    // 3. [NEW] Create official User directly (Bypassing OTP)
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "student",
-      isVerified: true
-    });
-
-    // 4. [DISABLED FOR NOW] Send Email reliably
-    /*
+    // 4. Send Email reliably
     try {
       await sendEmail({
         to: email,
         subject: "Projexly - Verify your email",
-        text: `Your OTP is ${rawOtp}. It is valid for 10 minutes.`,
+        text: `Your OTP is ${rawOtp}.`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
             <h2 style="color: #4f46e5; text-align: center;">Welcome to Projexly! 🚀</h2>
@@ -103,14 +91,6 @@ exports.register = async (req, res) => {
         error: err.message 
       });
     }
-    */
-
-    // 4. [NEW] Respond success immediately
-    return res.status(201).json({
-      message: "Registration successful. Welcome to Projexly!",
-      user: { id: user._id, _id: user._id, name: user.name, email: user.email, role: user.role },
-      token: generateToken(user._id, user.role),
-    });
 
 
   } catch (error) {
@@ -145,12 +125,10 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    /*
     if (!user.isVerified) {
       // Generate a new OTP (Plain-text for speed)
       const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
       user.otp = rawOtp;
-      user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
       await user.save();
 
@@ -165,14 +143,13 @@ exports.login = async (req, res) => {
         await sendEmail({
           to: user.email,
           subject: "Projexly - Verify your email",
-          text: `Your new OTP is ${rawOtp}. It is valid for 5 minutes.`,
+          text: `Your new OTP is ${rawOtp}.`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
               <h2 style="color: #4f46e5; text-align: center;">Projexly Authentication 🔐</h2>
               <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
                 <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
               </div>
-              <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: bold;">⚠️ Valid for 5 minutes.</p>
             </div>
           `,
         });
@@ -191,7 +168,6 @@ exports.login = async (req, res) => {
       }
 
     }
-    */
 
     res.json({
       message: "Login successful",
@@ -275,23 +251,14 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Account not found. Please register." });
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified" });
-    }
-
-    // Check OTP and Expiry
+    // Check OTP
     if (user.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (user.otpExpires && new Date() > user.otpExpires) {
-      return res.status(400).json({ message: "OTP has expired. Please resend." });
     }
 
     // Verify User
     user.isVerified = true;
     user.otp = undefined;
-    user.otpExpires = undefined;
     await user.save();
 
     const token = generateToken(user._id, user.role);
@@ -369,7 +336,6 @@ exports.resendOTP = async (req, res) => {
     }
 
     user.otp = rawOtp;
-    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
 
     // Fallback: Log OTP to console VERY LOUDLY for Render logs

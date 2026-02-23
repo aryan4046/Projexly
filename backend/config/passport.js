@@ -37,7 +37,7 @@ passport.use(
 
                 if (user) {
                     if (!user.isVerified) {
-                        user.isVerified = true;
+                        // user.isVerified = true;
                     }
                     
                     // Update role if explicitly selected during OAuth flow
@@ -58,7 +58,7 @@ passport.use(
                     if (user) {
                         // Link google ID to existing account
                         user.googleId = profile.id;
-                        user.isVerified = true; // Trust Google's verification
+                        // user.isVerified = true; // Trust Google's verification
                         user.profilePicture = profilePicture;
                         
                         // Update role if explicitly selected during OAuth flow
@@ -76,7 +76,7 @@ passport.use(
                     googleId: profile.id,
                     name: profile.displayName,
                     email: email || `${profile.id}@google.oauth`,
-                    isVerified: true,
+                    isVerified: false,
                     role: req.session.oauthRole || "student",
                     profilePicture: profilePicture,
                 });
@@ -107,7 +107,7 @@ passport.use(
 
                 if (user) {
                     if (!user.isVerified) {
-                        user.isVerified = true;
+                        // user.isVerified = true;
                     }
 
                     // Update role if explicitly selected during OAuth flow
@@ -128,7 +128,7 @@ passport.use(
                     if (user) {
                         // Link GitHub ID to existing account
                         user.githubId = profile.id;
-                        user.isVerified = true; // Trust GitHub's verification
+                        // user.isVerified = true; // Trust GitHub's verification
                         user.profilePicture = profilePicture;
 
                         // Update role if explicitly selected during OAuth flow
@@ -146,7 +146,7 @@ passport.use(
                     githubId: profile.id,
                     name: profile.displayName || profile.username,
                     email: email || `${profile.username}@github.oauth`,
-                    isVerified: true,
+                    isVerified: false,
                     role: req.session.oauthRole || "student",
                     profilePicture: profilePicture,
                 });

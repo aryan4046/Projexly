@@ -7,8 +7,6 @@ const userSchema = new mongoose.Schema(
     password: { type: String }, // Optional for OAuth users
     isVerified: { type: Boolean, default: false },
     otp: { type: String },
-    otpExpires: { type: Date }, 
-
     googleId: { type: String, unique: true, sparse: true },
     githubId: { type: String, unique: true, sparse: true },
     role: {
