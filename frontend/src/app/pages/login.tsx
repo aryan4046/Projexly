@@ -15,20 +15,11 @@ export function Login() {
   const [userType, setUserType] = useState<"student" | "freelancer">("student");
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
-  const [countdown, setCountdown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  const [canResend, setCanResend] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    if (showOTP && countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    } else if (countdown === 0) {
-      setCanResend(true);
-    }
-    return () => clearTimeout(timer);
-  }, [showOTP, countdown]);
+  // Countdown logic removed as per user request (no expiry)
 
   useEffect(() => {
     const emailParam = searchParams.get("email");
@@ -95,14 +86,14 @@ export function Login() {
   const handleResendOTP = async () => {
     setIsLoading(true);
     try {
-      setCountdown(60);
-      setCanResend(false);
+      // setCountdown(60);
+      setCanResend(true); // Keep it true
       setOtp("");
       await authAPI.resendOTP({ email });
       toast.success("New OTP sent!");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to resend OTP");
-      setCountdown(0);
+      // setCountdown(0);
       setCanResend(true);
     } finally {
       setIsLoading(false);
@@ -270,13 +261,7 @@ export function Login() {
                     VERIFY & SIGN IN
                   </Button>
                   <div className="flex flex-col items-center gap-4 mt-6">
-                    {!canResend ? (
-                      <div className="bg-white/5 px-4 py-2 rounded-full border border-white/10">
-                        <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">
-                          Code expires in <span className={`text-white`}>00:{countdown.toString().padStart(2, '0')}</span>
-                        </p>
-                      </div>
-                    ) : (
+                    {canResend && (
                       <button
                         type="button"
                         onClick={handleResendOTP}
@@ -285,8 +270,8 @@ export function Login() {
                         Resend New Code
                       </button>
                     )}
-                    <button type="button" onClick={() => { setShowOTP(false); setCountdown(60); setCanResend(false); }} className="text-slate-500 font-bold text-sm hover:text-white transition-colors">
-                      Back to login
+                    <button type="button" onClick={() => { setShowOTP(false); setCanResend(true); }} className="text-slate-500 font-bold text-sm hover:text-white transition-colors">
+                      Change email address
                     </button>
                   </div>
                 </form>
