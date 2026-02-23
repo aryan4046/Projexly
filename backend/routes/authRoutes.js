@@ -5,12 +5,13 @@ const sendEmail = require("../utils/sendEmail");
 const User = require("../models/User");
 const router = express.Router();
 
-const {
+const { 
   register: registerUser,
   login: loginUser,
   verifyOTP,
   resendOTP,
 } = require("../controllers/userController");
+const { sendOTPEmail } = require("../utils/sendEmail");
 const { sendNotification } = require("../services/notificationService");
 
 // Register
@@ -61,20 +62,7 @@ router.get(
     console.log(`[AUTH] GOOGLE OTP FOR ${req.user.email}: ${rawOtp}`);
 
     // Send Email (Non-blocking for speed)
-    sendEmail({
-      to: req.user.email,
-      subject: "Projexly - OAuth Verification Code",
-      text: `Your verification code is ${rawOtp}.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-          <h2 style="color: #4f46e5; text-align: center;">OAuth Verification 🔐</h2>
-          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-          </div>
-          <p style="text-align: center; color: #64748b;">Enter this code to complete your Google login.</p>
-        </div>
-      `,
-    }).catch(err => {
+    sendOTPEmail(req.user.email, rawOtp).catch(err => {
       console.error(`[AUTH] Google OTP Email failed: ${err.message}`);
     });
 
@@ -119,20 +107,7 @@ router.get(
     console.log(`[AUTH] GITHUB OTP FOR ${req.user.email}: ${rawOtp}`);
 
     // Send Email (Non-blocking for speed)
-    sendEmail({
-      to: req.user.email,
-      subject: "Projexly - OAuth Verification Code",
-      text: `Your verification code is ${rawOtp}.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-          <h2 style="color: #4f46e5; text-align: center;">OAuth Verification 🔐</h2>
-          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px dashed #cbd5e1;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b;">${rawOtp}</span>
-          </div>
-          <p style="text-align: center; color: #64748b;">Enter this code to complete your GitHub login.</p>
-        </div>
-      `,
-    }).catch(err => {
+    sendOTPEmail(req.user.email, rawOtp).catch(err => {
       console.error(`[AUTH] GitHub OTP Email failed: ${err.message}`);
     });
 
